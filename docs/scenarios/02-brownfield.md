@@ -146,4 +146,17 @@ delivery of the click queue).
 
 ## 4. Task decomposition
 
-*(Link to tasks.md once generated.)*
+[tasks.md](../../specs/002-brownfield-analytics-expiry/tasks.md): 20 tasks. Details completed in T019.
+
+## 5. Execution
+
+*(Completed in T019.)*
+
+## 6. Validation
+
+### Regression baseline (T001)
+
+Recorded on branch `002-brownfield-analytics-expiry` at `9ca50d7`, before any code change
+(2026-10-11 03:51 IST): build 0 warnings / 0 errors; **131 unit + 64 integration tests passing,
+0 failing**, identical to `main` after feature 001. From here on every task runs the full suite; a
+feature 001 test may change only where tasks.md lists it under "Changed tests".

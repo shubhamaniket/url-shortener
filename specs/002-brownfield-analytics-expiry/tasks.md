@@ -38,7 +38,7 @@ listed under "Changed tests" in that task, with the reason (research R10, spec S
 
 ## Phase 1: Setup
 
-- [ ] T001 Record the regression baseline: run the full suite on this branch before any code change and write the counts into docs/scenarios/02-brownfield.md (new "Regression baseline" note in section 6)
+- [x] T001 Record the regression baseline: run the full suite on this branch before any code change and write the counts into docs/scenarios/02-brownfield.md (new "Regression baseline" note in section 6)
   - **AC**: counts match `main` (131 unit + 64 integration, 0 failures); no code changed
 
 ---
