@@ -138,15 +138,17 @@ Clean-architecture projects from plan.md: `src/UrlShortener.{Domain,Application,
 
 **Independent Test**: create with `team-offsite` → 201 with that code; `/TEAM-OFFSITE` redirects; `Team-Offsite` again → 409.
 
-- [ ] T016 [P] [US3] Implement alias rules in src/UrlShortener.Domain/Links/CustomAlias.cs, field `customAlias`
+- [x] T016 [P] [US3] Implement alias rules in src/UrlShortener.Domain/Links/CustomAlias.cs, field `customAlias`
   - **AC**: "Length 3–30"; "Only `A–Z a–z 0–9 - _`"; "Not reserved (case-insensitive): `api`, `health`, `swagger`, `admin`, `static`, `assets`"
+  - **Changes during implementation**: surrounding whitespace trimmed (consistent with `url`); empty/whitespace alias rejected rather than treated as absent; reserved words match only the whole alias (`api-docs` is allowed)
   - **Tests**: tests/UrlShortener.UnitTests/Domain/CustomAliasTests.cs — rejects `ab`, 31 chars, `my alias`, `über`, `a.b`, `a/b`, `API`, `Health`; accepts `abc`, 30 chars, `team-offsite`, `Team_2026`
   - **Sign-off**: input validation
-- [ ] T017 [US3] Add the alias path to `LinkService.CreateAsync` in src/UrlShortener.Application/Links/LinkService.cs and `customAlias` to src/UrlShortener.Api/Contracts/CreateLinkRequest.cs
+- [x] T017 [US3] Add the alias path to `LinkService.CreateAsync` in src/UrlShortener.Application/Links/LinkService.cs and `customAlias` to src/UrlShortener.Api/Contracts/CreateLinkRequest.cs
   - **AC**: alias validated, stored with original case, `IsCustomAlias = true`; one `TryAddAsync`, `false` → `AliasAlreadyExistsException` (no retry); `null`/omitted alias → generated path unchanged
   - **Tests**: tests/UrlShortener.UnitTests/Application/CreateLinkWithAliasTests.cs — alias used as code with case kept; taken alias → exception; invalid alias → `LinkValidationException`. tests/UrlShortener.IntegrationTests/CustomAliasTests.cs — 201 with alias; `Team-Offsite` after `team-offsite` → 409 ProblemDetails with title and detail; alias equal to an existing generated code ignoring case → 409; reserved/invalid alias → 400 `errors.customAlias`; `GET /TEAM-OFFSITE` → 302
-- [ ] T018 [US3] Add the alias race test to tests/UrlShortener.IntegrationTests/ConcurrencyTests.cs
+- [x] T018 [US3] Add the alias race test to tests/UrlShortener.IntegrationTests/ConcurrencyTests.cs
   - **AC / Tests**: 10 parallel creates with the same alias → exactly one 201, nine 409, never 500; exactly one row stored (SC-005)
+  - **Verification**: requests alternate the alias's letter case to also exercise case-insensitive uniqueness; passed 8/8 runs. No mutation check: simulating the bug would require dropping the unique index via a migration
 
 **Checkpoint**: aliases work alongside generated codes
 

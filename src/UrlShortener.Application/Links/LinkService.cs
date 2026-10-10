@@ -29,8 +29,7 @@ public sealed partial class LinkService(
 
         if (command.CustomAlias is not null)
         {
-            // Replaced by the alias path in T017.
-            throw new LinkValidationException("customAlias", "Custom aliases are not supported yet.");
+            return await CreateWithAliasAsync(CustomAlias.Parse(command.CustomAlias), destination, createdAtUtc, cancellationToken);
         }
 
         // The unique index decides; a collision (including with an alias in another letter case)
@@ -49,6 +48,21 @@ public sealed partial class LinkService(
         }
 
         throw new CodeGenerationFailedException(MaxGenerationAttempts);
+    }
+
+    private async Task<LinkDetails> CreateWithAliasAsync(
+        CustomAlias alias, DestinationUrl destination, DateTime createdAtUtc, CancellationToken cancellationToken)
+    {
+        var link = ShortLink.CreateWithCustomAlias(alias.Value, destination.Value, createdAtUtc);
+
+        // One attempt: the unique index rejects an alias taken in any letter case (FR-012).
+        if (!await repository.TryAddAsync(link, cancellationToken))
+        {
+            throw new AliasAlreadyExistsException(alias.Value);
+        }
+
+        LogLinkCreated(logger, link.Code);
+        return ToDetails(link);
     }
 
     public async Task<string?> ResolveForRedirectAsync(string code, CancellationToken cancellationToken)

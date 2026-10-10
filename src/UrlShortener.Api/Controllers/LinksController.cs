@@ -10,7 +10,7 @@ namespace UrlShortener.Api.Controllers;
 [Route("api/links")]
 public sealed class LinksController(ILinkService linkService) : ControllerBase
 {
-    /// <summary>Create a short link with a generated code.</summary>
+    /// <summary>Create a short link with a generated code or the requested custom alias.</summary>
     [HttpPost]
     [ProducesResponseType<LinkResponse>(StatusCodes.Status201Created, "application/json")]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest, "application/problem+json")]
