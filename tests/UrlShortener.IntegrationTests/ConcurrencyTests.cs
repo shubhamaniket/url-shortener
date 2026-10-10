@@ -35,6 +35,30 @@ public sealed class ConcurrencyTests(ApiFactory factory) : IClassFixture<ApiFact
         Assert.Equal(ParallelRequests, clickCount);
     }
 
+    [Fact]
+    public async Task ConcurrentCreatesWithSameAliasProduceExactlyOneLink()
+    {
+        const int Attempts = 10;
+        var alias = $"race-{Guid.NewGuid():N}"[..20];
+        var client = factory.CreateClient();
+
+        // Each request asks for the same alias in a different letter case, all in flight at once.
+        var responses = await Task.WhenAll(Enumerable.Range(0, Attempts)
+            .Select(i => client.PostAsJsonAsync(
+                new Uri("/api/links", UriKind.Relative),
+                new { url = $"https://example.com/race/{i}", customAlias = i % 2 == 0 ? alias : alias.ToUpperInvariant() })));
+
+        var statuses = responses.Select(response => response.StatusCode).ToList();
+        Assert.Equal(1, statuses.Count(status => status == HttpStatusCode.Created));
+        Assert.Equal(Attempts - 1, statuses.Count(status => status == HttpStatusCode.Conflict));
+        Assert.DoesNotContain(HttpStatusCode.InternalServerError, statuses);
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var normalized = alias.ToLowerInvariant();
+        Assert.Equal(1, await scope.ServiceProvider.GetRequiredService<AppDbContext>().ShortLinks
+            .CountAsync(link => link.NormalizedCode == normalized));
+    }
+
     private async Task<string> CreateLinkAsync(string url)
     {
         var response = await factory.CreateClient().PostAsJsonAsync(new Uri("/api/links", UriKind.Relative), new { url });

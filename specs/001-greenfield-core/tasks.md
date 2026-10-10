@@ -146,8 +146,9 @@ Clean-architecture projects from plan.md: `src/UrlShortener.{Domain,Application,
 - [x] T017 [US3] Add the alias path to `LinkService.CreateAsync` in src/UrlShortener.Application/Links/LinkService.cs and `customAlias` to src/UrlShortener.Api/Contracts/CreateLinkRequest.cs
   - **AC**: alias validated, stored with original case, `IsCustomAlias = true`; one `TryAddAsync`, `false` → `AliasAlreadyExistsException` (no retry); `null`/omitted alias → generated path unchanged
   - **Tests**: tests/UrlShortener.UnitTests/Application/CreateLinkWithAliasTests.cs — alias used as code with case kept; taken alias → exception; invalid alias → `LinkValidationException`. tests/UrlShortener.IntegrationTests/CustomAliasTests.cs — 201 with alias; `Team-Offsite` after `team-offsite` → 409 ProblemDetails with title and detail; alias equal to an existing generated code ignoring case → 409; reserved/invalid alias → 400 `errors.customAlias`; `GET /TEAM-OFFSITE` → 302
-- [ ] T018 [US3] Add the alias race test to tests/UrlShortener.IntegrationTests/ConcurrencyTests.cs
+- [x] T018 [US3] Add the alias race test to tests/UrlShortener.IntegrationTests/ConcurrencyTests.cs
   - **AC / Tests**: 10 parallel creates with the same alias → exactly one 201, nine 409, never 500; exactly one row stored (SC-005)
+  - **Verification**: requests alternate the alias's letter case to also exercise case-insensitive uniqueness; passed 8/8 runs. No mutation check: simulating the bug would require dropping the unique index via a migration
 
 **Checkpoint**: aliases work alongside generated codes
 
