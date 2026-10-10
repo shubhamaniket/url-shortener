@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 using UrlShortener.Application.Abstractions;
+using UrlShortener.Infrastructure.Links;
 using UrlShortener.Infrastructure.Persistence;
 
 namespace UrlShortener.Infrastructure;
@@ -20,6 +21,7 @@ public static class DependencyInjection
         services.AddDbContext<AppDbContext>((provider, options) => options.UseSqlite(
             provider.GetRequiredService<IConfiguration>().GetConnectionString("Default") ?? DefaultConnectionString));
         services.AddScoped<IShortLinkRepository, ShortLinkRepository>();
+        services.AddSingleton<IShortCodeGenerator, Base62CodeGenerator>();
 
         return services;
     }
