@@ -175,8 +175,9 @@ Clean-architecture projects from plan.md: `src/UrlShortener.{Domain,Application,
 
 **Independent Test**: running service → 200 `Healthy`; unreachable database → 503 `Unhealthy`.
 
-- [ ] T020 [US5] Implement src/UrlShortener.Infrastructure/Health/DatabaseHealthCheck.cs (`Database.CanConnectAsync()`), register on the existing `AddHealthChecks()`
+- [x] T020 [US5] Implement src/UrlShortener.Infrastructure/Health/DatabaseHealthCheck.cs (`Database.CanConnectAsync()`), register on the existing `AddHealthChecks()`
   - **AC**: no new package (research R10)
+  - **Changes during implementation**: placed in src/UrlShortener.Api/Health/ instead of Infrastructure, because `IHealthCheck` ships with ASP.NET Core but would be a new package in Infrastructure; the unhealthy test also disables startup migration (otherwise the app could not start against the unreachable database). Mutation check: without the registration the unhealthy test fails
   - **Tests**: extend tests/UrlShortener.IntegrationTests/HealthTests.cs — healthy → 200 body `Healthy`; connection string pointing at a non-existent directory → 503 body `Unhealthy`
 
 ---

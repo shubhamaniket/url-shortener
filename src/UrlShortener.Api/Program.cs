@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 
 using UrlShortener.Api.Configuration;
 using UrlShortener.Api.ErrorHandling;
+using UrlShortener.Api.Health;
 using UrlShortener.Application;
 using UrlShortener.Application.Options;
 using UrlShortener.Infrastructure;
@@ -17,7 +18,7 @@ builder.Services.AddControllers(options =>
     options.ModelMetadataDetailsProviders.Add(new SystemTextJsonValidationMetadataProvider()));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddHealthChecks();
+builder.Services.AddHealthChecks().AddCheck<DatabaseHealthCheck>("database");
 builder.Services.AddProblemDetails(options => options.CustomizeProblemDetails = context =>
     context.ProblemDetails.Extensions.TryAdd("traceId", Activity.Current?.Id ?? context.HttpContext.TraceIdentifier));
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
