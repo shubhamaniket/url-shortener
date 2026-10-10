@@ -41,7 +41,7 @@ Clean-architecture projects from plan.md: `src/UrlShortener.{Domain,Application,
 
 **Purpose**: Dependencies and tooling the rest of the feature needs
 
-- [ ] T001 Add `Microsoft.EntityFrameworkCore.Sqlite` 8.0.x to src/UrlShortener.Infrastructure/UrlShortener.Infrastructure.csproj and `Microsoft.EntityFrameworkCore.Design` 8.0.x (`PrivateAssets="all"`) to src/UrlShortener.Api/UrlShortener.Api.csproj; add `*.db`, `*.db-shm`, `*.db-wal` to .gitignore
+- [x] T001 Add `Microsoft.EntityFrameworkCore.Sqlite` 8.0.x to src/UrlShortener.Infrastructure/UrlShortener.Infrastructure.csproj and `Microsoft.EntityFrameworkCore.Design` 8.0.x (`PrivateAssets="all"`) to src/UrlShortener.Api/UrlShortener.Api.csproj; add `*.db`, `*.db-shm`, `*.db-wal` to .gitignore
   - **AC**: solution builds; `dotnet list package --vulnerable --include-transitive` reports no findings; licenses recorded in the commit body (MIT)
   - **Sign-off**: new dependencies (research R9)
 - [ ] T002 [P] Create local tool manifest .config/dotnet-tools.json pinning `dotnet-ef` 8.0.x
