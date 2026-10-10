@@ -54,7 +54,7 @@ listed under "Changed tests" in that task, with the reason (research R10, spec S
 - [x] T003 [P] Add privacy-reducing rules in src/UrlShortener.Domain/Links/ReferrerHost.cs and src/UrlShortener.Domain/Links/UserAgentFamily.cs (research R3, data-model tables)
   - **AC**: `ReferrerHost.From`: absolute http/https → lower-cased host (≤ 253), credentials/path/query dropped; anything else → `null`. `UserAgentFamily.From`: ordered rules "`Bot` → `Edge` → `Firefox` → `Chrome` → `Safari` → `Other`", missing → `Other`
   - **Tests**: tests/UrlShortener.UnitTests/Domain/ReferrerHostTests.cs (every row of the data-model ReferrerHost table) and UserAgentFamilyTests.cs (real UA strings: Chrome, Edge, Firefox, Safari macOS/iOS, Chrome iOS `CriOS`, Googlebot, Slackbot, facebookexternalhit, WhatsApp preview, curl → Other, empty → Other)
-- [ ] T004 Add the `ClickEvent` entity in src/UrlShortener.Domain/Links/ClickEvent.cs
+- [x] T004 Add the `ClickEvent` entity in src/UrlShortener.Domain/Links/ClickEvent.cs
   - **AC**: fields per data-model ("`ShortLinkId`", "`OccurredAtUtc`" UTC, "`ReferrerHost` ≤ 253 or null", "`UserAgentFamily` ≤ 16"); factory `ClickEvent.Create(linkId, occurredAtUtc, referer, userAgent)` applies T003's rules so raw values never reach the entity
   - **Tests**: tests/UrlShortener.UnitTests/Domain/ClickEventTests.cs: raw referer with path/query/credentials stored as host only; raw UA stored as family only; non-UTC time rejected
 - [ ] T005 Persistence and migration in src/UrlShortener.Infrastructure/Persistence/: `ClickEventConfiguration.cs`, `ExpiresAtUtc` mapping (UTC converter) in ShortLinkConfiguration.cs, `DbSet<ClickEvent>` in AppDbContext.cs; generate migration `AddExpiryAndClickEvents`
