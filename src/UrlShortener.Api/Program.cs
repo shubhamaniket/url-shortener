@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 
 using UrlShortener.Api.Configuration;
 using UrlShortener.Api.ErrorHandling;
+using UrlShortener.Application;
 using UrlShortener.Application.Options;
 using UrlShortener.Infrastructure;
 using UrlShortener.Infrastructure.Persistence;
@@ -23,6 +24,7 @@ builder.Services.AddOptions<ShortLinkOptions>()
     .ValidateOnStart();
 builder.Services.AddSingleton<IValidateOptions<ShortLinkOptions>, ShortLinkOptionsValidator>();
 builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddApplication();
 builder.Services.AddInfrastructure();
 
 var app = builder.Build();
