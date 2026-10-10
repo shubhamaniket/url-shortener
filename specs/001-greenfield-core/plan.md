@@ -107,13 +107,13 @@ src/
 │   ├── Persistence/ShortLinkRepository.cs         # unique violation → TryAdd false
 │   ├── Links/Base62CodeGenerator.cs
 │   ├── Links/DbClickRecorder.cs                   # atomic ExecuteUpdate (temporary, see R6)
-│   ├── Health/DatabaseHealthCheck.cs
 │   └── DependencyInjection.cs
 └── UrlShortener.Api/
     ├── Controllers/LinksController.cs             # POST /api/links, GET /api/links/{code}
     ├── Controllers/RedirectController.cs          # GET /{code}
     ├── Contracts/CreateLinkRequest.cs, LinkResponse.cs
     ├── ErrorHandling/GlobalExceptionHandler.cs
+    ├── Health/DatabaseHealthCheck.cs          # Api, not Infrastructure: no extra package (T020)
     └── Program.cs
 
 tests/
