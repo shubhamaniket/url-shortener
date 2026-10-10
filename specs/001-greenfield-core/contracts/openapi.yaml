@@ -1,0 +1,314 @@
+openapi: 3.0.3
+info:
+  title: URL Shortener API
+  version: 0.1.0
+  description: |
+    Contract for feature 001 (greenfield core). Source of truth for the HTTP interface,
+    reviewed alongside [http-api.md](http-api.md).
+
+    - All errors are RFC 7807 ProblemDetails (`application/problem+json`).
+    - Validation errors use the ValidationProblemDetails shape with an `errors` object keyed by field.
+    - Short URLs are always built from the configured public base URL, never from the request `Host`.
+    - Not in this version: rate limiting (429, feature 003), expiry (410) and stats (feature 002).
+
+    **Postman tip:** to see the `302` from `GET /{code}` instead of the destination page, turn off
+    *Settings → Automatically follow redirects* for that request.
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:5058
+    description: Local `dotnet run` (http launch profile)
+  - url: http://localhost:8080
+    description: Docker Compose
+
+tags:
+  - name: Links
+    description: Create short links and view their details
+  - name: Redirect
+    description: Follow a short URL
+  - name: Health
+    description: Service and database health
+
+paths:
+  /api/links:
+    post:
+      tags: [Links]
+      operationId: createLink
+      summary: Create a short link
+      description: |
+        Creates a short link with a generated 7-character Base62 code, or with the given custom
+        alias. Submitting the same URL twice creates two different links.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateLinkRequest'
+            examples:
+              generatedCode:
+                summary: Generated code
+                value:
+                  url: https://example.com/some/long/path?x=1
+              customAlias:
+                summary: Custom alias
+                value:
+                  url: https://example.com/offsite-2026
+                  customAlias: team-offsite
+              invalidScheme:
+                summary: Rejected - javascript scheme (400)
+                value:
+                  url: javascript:alert(1)
+              missingScheme:
+                summary: Rejected - no scheme, hint to add https:// (400)
+                value:
+                  url: www.example.com/page
+              bogusScheme:
+                summary: Rejected - parses as scheme "localhost" (400)
+                value:
+                  url: localhost:8080
+              userInfo:
+                summary: Rejected - user info disguises the host (400)
+                value:
+                  url: https://google.com@evil.example/login
+              selfHost:
+                summary: Rejected - points at the shortener itself (400)
+                value:
+                  url: http://LOCALHOST:5058/abc1234
+              reservedAlias:
+                summary: Rejected - reserved alias (400)
+                value:
+                  url: https://example.com
+                  customAlias: API
+              aliasCaseConflict:
+                summary: Conflict if team-offsite already exists (409)
+                value:
+                  url: https://example.com/other
+                  customAlias: Team-Offsite
+      responses:
+        '201':
+          description: Link created
+          headers:
+            Location:
+              description: URL of the link details resource
+              schema:
+                type: string
+                example: /api/links/aZ3kP9q
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LinkResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          description: The alias is already in use (compared ignoring letter case)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              example:
+                type: https://tools.ietf.org/html/rfc9110#section-15.5.10
+                title: Alias already in use
+                status: 409
+                detail: The alias 'Team-Offsite' is already taken.
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/links/{code}:
+    get:
+      tags: [Links]
+      operationId: getLink
+      summary: Get link details and total click count
+      description: |
+        Public: anyone who knows the code can read its details. Reading details does not count
+        as a click. Generated codes match case-sensitively; custom aliases match in any case.
+      parameters:
+        - $ref: '#/components/parameters/Code'
+      responses:
+        '200':
+          description: Link details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LinkResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /{code}:
+    get:
+      tags: [Redirect]
+      operationId: redirectToOriginalUrl
+      summary: Redirect to the original URL
+      description: |
+        Temporary redirect (302) so browsers do not cache it and every visit is counted.
+        Click counting is best-effort: if recording a click fails, the redirect still succeeds.
+        Hidden from the generated Swagger UI; documented here for testing.
+      parameters:
+        - $ref: '#/components/parameters/Code'
+      responses:
+        '302':
+          description: Redirect to the original URL
+          headers:
+            Location:
+              description: The original URL
+              schema:
+                type: string
+                format: uri
+                example: https://example.com/some/long/path?x=1
+            Cache-Control:
+              schema:
+                type: string
+                example: no-store
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /health:
+    get:
+      tags: [Health]
+      operationId: getHealth
+      summary: Health check (service and database)
+      responses:
+        '200':
+          description: Service is up and the database is reachable
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Healthy
+        '503':
+          description: The database is unreachable
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Unhealthy
+
+components:
+  parameters:
+    Code:
+      name: code
+      in: path
+      required: true
+      description: Generated code (7 chars, Base62) or custom alias (3-30 chars)
+      schema:
+        type: string
+        minLength: 3
+        maxLength: 30
+        pattern: '^[A-Za-z0-9_-]{3,30}$'
+        example: aZ3kP9q
+
+  schemas:
+    CreateLinkRequest:
+      type: object
+      required: [url]
+      properties:
+        url:
+          type: string
+          maxLength: 2048
+          description: |
+            Absolute http or https URL with a host. Rejected: other schemes, missing scheme,
+            user info (`user@host`), and the shortener's own host. Leading and trailing
+            whitespace is trimmed.
+          example: https://example.com/some/long/path?x=1
+        customAlias:
+          type: string
+          nullable: true
+          minLength: 3
+          maxLength: 30
+          pattern: '^[A-Za-z0-9_-]+$'
+          description: |
+            Optional. Letters, digits, `-` and `_`. Unique ignoring case and keeps the case it was
+            created with. Reserved (any case): api, health, swagger, admin, static, assets.
+          example: team-offsite
+
+    LinkResponse:
+      type: object
+      required: [code, shortUrl, originalUrl, createdAtUtc, clickCount]
+      properties:
+        code:
+          type: string
+          example: aZ3kP9q
+        shortUrl:
+          type: string
+          format: uri
+          example: http://localhost:5058/aZ3kP9q
+        originalUrl:
+          type: string
+          format: uri
+          example: https://example.com/some/long/path?x=1
+        createdAtUtc:
+          type: string
+          format: date-time
+          example: '2026-10-10T13:45:00Z'
+        clickCount:
+          type: integer
+          format: int64
+          minimum: 0
+          example: 0
+
+    ProblemDetails:
+      type: object
+      description: RFC 7807 problem details. Extra members (e.g. `traceId`) may be present.
+      additionalProperties: true
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+        traceId:
+          type: string
+
+    ValidationProblemDetails:
+      allOf:
+        - $ref: '#/components/schemas/ProblemDetails'
+        - type: object
+          properties:
+            errors:
+              type: object
+              description: Error messages keyed by request field name (`url`, `customAlias`)
+              additionalProperties:
+                type: array
+                items:
+                  type: string
+
+  responses:
+    ValidationError:
+      description: Invalid request (URL or alias rules)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ValidationProblemDetails'
+          example:
+            type: https://tools.ietf.org/html/rfc9110#section-15.5.1
+            title: One or more validation errors occurred.
+            status: 400
+            errors:
+              url:
+                - The URL must start with http:// or https://. Did you mean https://www.example.com/page?
+    NotFound:
+      description: No link with this code
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            type: https://tools.ietf.org/html/rfc9110#section-15.5.5
+            title: Not Found
+            status: 404
+    ServerError:
+      description: Unexpected error, or no unique code could be generated after 5 attempts
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            type: https://tools.ietf.org/html/rfc9110#section-15.6.1
+            title: An error occurred while processing your request.
+            status: 500
