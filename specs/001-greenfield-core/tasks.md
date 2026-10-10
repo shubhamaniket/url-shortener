@@ -124,8 +124,9 @@ Clean-architecture projects from plan.md: `src/UrlShortener.{Domain,Application,
   - **AC**: `/health` and `/api/...` routes are unaffected; no `DbContext` in the controller
   - **Tests**: tests/UrlShortener.IntegrationTests/RedirectTests.cs (client with `AllowAutoRedirect = false`) — 302 with exact `Location` and `Cache-Control: no-store`; unknown code → 404 problem+json; generated code in wrong case → 404; path failing the constraint (e.g. `/a.b`) → 404; after 3 redirects the stored `ClickCount` is 3 (read via a DbContext scope from `ApiFactory`); with a throwing `IClickRecorder` swapped in, redirect is still 302 (SC-003a)
   - **Sign-off**: redirect path
-- [ ] T015 [US2] Add concurrent click counting test in tests/UrlShortener.IntegrationTests/ConcurrencyTests.cs
+- [x] T015 [US2] Add concurrent click counting test in tests/UrlShortener.IntegrationTests/ConcurrencyTests.cs
   - **AC / Tests**: 20 parallel `GET /{code}` → all 302 and stored `ClickCount` exactly 20 (SC-003, no lost increments)
+  - **Verification**: passed 5/5 runs; mutation check with a read-then-write recorder stored 1 instead of 20, so the test does detect lost updates
 
 **Checkpoint**: US1 + US2 = create and follow links
 
