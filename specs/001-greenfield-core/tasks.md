@@ -57,7 +57,7 @@ Clean-architecture projects from plan.md: `src/UrlShortener.{Domain,Application,
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T004 Create the `ShortLink` entity and `GeneratedCode` constants in src/UrlShortener.Domain/Links/ShortLink.cs and src/UrlShortener.Domain/Links/GeneratedCode.cs
+- [x] T004 Create the `ShortLink` entity and `GeneratedCode` constants in src/UrlShortener.Domain/Links/ShortLink.cs and src/UrlShortener.Domain/Links/GeneratedCode.cs
   - **AC**: fields per data-model: `Id` long; `Code` "3–30"; `NormalizedCode` = "`Code` lower-cased (invariant culture)"; `IsCustomAlias` bool; `OriginalUrl` "≤ 2048"; `CreatedAtUtc` UTC; `ClickCount` "Starts at 0". No public setters except via EF; `Matches(string input)` implements the lookup rule: "matches if `IsCustomAlias` is true, or if `Code == input` with ordinal (case-sensitive) comparison"; `GeneratedCode.Alphabet` = Base62, `GeneratedCode.Length` = 7; Domain project still has no package references
   - **Tests**: tests/UrlShortener.UnitTests/Domain/ShortLinkTests.cs — normalization; alias matches `TEAM-OFFSITE` for `team-offsite`; generated `Abc123x` does not match `abc123x`; new link has `ClickCount` 0 and UTC time
 - [ ] T005 Create Application abstractions and options in src/UrlShortener.Application/: Abstractions/IShortLinkRepository.cs (`FindByNormalizedCodeAsync`, `TryAddAsync` → `bool`), Abstractions/IShortCodeGenerator.cs, Abstractions/IClickRecorder.cs (`RecordClickAsync(long linkId, CancellationToken)`), Options/ShortLinkOptions.cs (`PublicBaseUrl`), Links/LinkDetails.cs, Links/CreateLinkCommand.cs, Links/AliasAlreadyExistsException.cs, Links/CodeGenerationFailedException.cs, DependencyInjection.cs
