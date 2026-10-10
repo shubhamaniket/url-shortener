@@ -138,8 +138,9 @@ Clean-architecture projects from plan.md: `src/UrlShortener.{Domain,Application,
 
 **Independent Test**: create with `team-offsite` → 201 with that code; `/TEAM-OFFSITE` redirects; `Team-Offsite` again → 409.
 
-- [ ] T016 [P] [US3] Implement alias rules in src/UrlShortener.Domain/Links/CustomAlias.cs, field `customAlias`
+- [x] T016 [P] [US3] Implement alias rules in src/UrlShortener.Domain/Links/CustomAlias.cs, field `customAlias`
   - **AC**: "Length 3–30"; "Only `A–Z a–z 0–9 - _`"; "Not reserved (case-insensitive): `api`, `health`, `swagger`, `admin`, `static`, `assets`"
+  - **Changes during implementation**: surrounding whitespace trimmed (consistent with `url`); empty/whitespace alias rejected rather than treated as absent; reserved words match only the whole alias (`api-docs` is allowed)
   - **Tests**: tests/UrlShortener.UnitTests/Domain/CustomAliasTests.cs — rejects `ab`, 31 chars, `my alias`, `über`, `a.b`, `a/b`, `API`, `Health`; accepts `abc`, 30 chars, `team-offsite`, `Team_2026`
   - **Sign-off**: input validation
 - [ ] T017 [US3] Add the alias path to `LinkService.CreateAsync` in src/UrlShortener.Application/Links/LinkService.cs and `customAlias` to src/UrlShortener.Api/Contracts/CreateLinkRequest.cs

@@ -46,7 +46,8 @@ Applied in this order to the trimmed input; first failure wins, reported on fiel
 
 ### CustomAlias (FR-010, FR-011)
 
-Reported on field `customAlias`:
+Reported on field `customAlias`. Surrounding whitespace is trimmed (as for `url`); an omitted or
+`null` alias means "generate a code", while an empty or whitespace-only alias is rejected by rule 1:
 
 | # | Rule | Example rejected input |
 |---|---|---|
