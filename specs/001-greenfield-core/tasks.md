@@ -46,7 +46,7 @@ Clean-architecture projects from plan.md: `src/UrlShortener.{Domain,Application,
   - **Sign-off**: new dependencies (research R9)
 - [x] T002 [P] Create local tool manifest .config/dotnet-tools.json pinning `dotnet-ef` 8.0.x
   - **AC**: `dotnet tool restore` then `dotnet ef --version` prints 8.0.x
-- [ ] T003 [P] Add a project reference to src/UrlShortener.Infrastructure in tests/UrlShortener.UnitTests/UrlShortener.UnitTests.csproj
+- [x] T003 [P] Add a project reference to src/UrlShortener.Infrastructure in tests/UrlShortener.UnitTests/UrlShortener.UnitTests.csproj
   - **AC**: unit test project builds and references Domain, Application, Infrastructure. Hand-written fakes go in tests/UrlShortener.UnitTests/Fakes/ and are created by the first task that needs each one (T011: fixed `TimeProvider`, in-memory `IShortLinkRepository` keyed by normalized code, scripted `IShortCodeGenerator`; T013: throwing and counting `IClickRecorder`)
 
 ---
