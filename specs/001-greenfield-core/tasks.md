@@ -88,10 +88,11 @@ Clean-architecture projects from plan.md: `src/UrlShortener.{Domain,Application,
 
 **Independent Test**: POST a valid URL → 201 with 7-char code, `shortUrl` on the configured base URL, `Location` header, `clickCount` 0; each malicious input → 400 and nothing stored.
 
-- [ ] T009 [P] [US1] Implement URL validation in src/UrlShortener.Domain/Links/DestinationUrl.cs, applying data-model rules 1–7 in order to the trimmed input, field `url`
+- [x] T009 [P] [US1] Implement URL validation in src/UrlShortener.Domain/Links/DestinationUrl.cs, applying data-model rules 1–7 in order to the trimmed input, field `url`
   - **AC**: "Required, not whitespace"; "Length ≤ 2048"; "Parses as an absolute URI"; "Scheme is `http` or `https`" (allowlist after parsing); "Has a host"; "No user info"; "Host ≠ configured public base host (case-insensitive, any scheme/port)"; missing-scheme input (no `://`) gets the hint "Did you mean https://…?"
   - **Tests**: tests/UrlShortener.UnitTests/Domain/DestinationUrlTests.cs — `[Theory]` over every rejected example in data-model.md (`javascript:alert(1)`, `data:text/html,…`, `file:///etc/passwd`, `ftp://x`, `www.example.com/page`, `www.example.com:8080/page`, `localhost:8080`, `/some/path`, `http:///path`, `https://google.com@evil.example/login`, `https://user:pass@site.example`, `HTTP://LOCALHOST:5058/x`, empty, whitespace, 2049 chars); accepted: http, https, 2048 chars exactly, surrounding whitespace trimmed
   - **Sign-off**: input validation / security
+  - **Changes during implementation**: the stored value is the parsed, normalized URL (`Uri.AbsoluteUri`), not the raw trimmed input, so the redirect target is exactly what was validated (no parser differential with browsers); length is re-checked after normalization. The `https://` hint is given only when the input has no `://` and becomes a valid http(s) URL with the prefix, so `javascript:alert(1)` gets no misleading hint. Backslash inputs are handled per platform by `System.Uri` (rejected or escaped on Unix) and a test asserts a raw backslash is never stored
 - [ ] T010 [P] [US1] Implement `Base62CodeGenerator` in src/UrlShortener.Infrastructure/Links/Base62CodeGenerator.cs using `RandomNumberGenerator.GetString(GeneratedCode.Alphabet, GeneratedCode.Length)`; register in Infrastructure DI
   - **AC**: no use of `System.Random`
   - **Tests**: tests/UrlShortener.UnitTests/Infrastructure/Base62CodeGeneratorTests.cs — length 7; only Base62 characters; 1,000 generated codes contain no duplicates
