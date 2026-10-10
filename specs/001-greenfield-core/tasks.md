@@ -184,8 +184,9 @@ Clean-architecture projects from plan.md: `src/UrlShortener.{Domain,Application,
 
 ## Phase 8: Polish & Cross-Cutting Concerns
 
-- [ ] T021 [P] Add the OpenAPI drift test in tests/UrlShortener.IntegrationTests/OpenApiContractTests.cs (research R14)
+- [x] T021 [P] Add the OpenAPI drift test in tests/UrlShortener.IntegrationTests/OpenApiContractTests.cs (research R14)
   - **AC / Tests**: fetch `/swagger/v1/swagger.json` (this test alone switches `ApiFactory` to the `Development` environment, where Swagger is enabled) and assert `POST /api/links` documents 201, 400, 409, 500 and `GET /api/links/{code}` documents 200, 404, matching contracts/openapi.yaml
+  - **Changes during implementation**: expected operations/statuses/field names are copied from openapi.yaml into the test (no YAML parser package); also checks the `CreateLinkRequest`/`LinkResponse` field names and that 400/409/500 are documented as `application/problem+json`. Mutation check: deleting the 409 declaration fails 2 tests
 - [ ] T022 [P] Create requests.http at the repository root covering quickstart scenarios 1–12, and delete the template src/UrlShortener.Api/UrlShortener.Api.http
   - **AC**: runnable top to bottom with the VS Code REST Client against `http://localhost:5058`
 - [ ] T023 Run the quickstart validation (specs/001-greenfield-core/quickstart.md): manual scenarios 1–12, Postman import of contracts/openapi.yaml, SC-004 latency loop
