@@ -125,6 +125,33 @@ public sealed class ShortLinkRepositoryTests : IAsyncLifetime
         Assert.Contains("\"NormalizedCode\"", sql, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public async Task ClickRecorderIncrementsStoredCount()
+    {
+        await using (var scope = _services.CreateAsyncScope())
+        {
+            await Repository(scope).TryAddAsync(
+                ShortLink.CreateWithGeneratedCode("Clk123x", "https://example.com/a", CreatedAt), CancellationToken.None);
+        }
+
+        long id;
+        await using (var scope = _services.CreateAsyncScope())
+        {
+            id = (await Repository(scope).FindByNormalizedCodeAsync("clk123x", CancellationToken.None))!.Id;
+            var recorder = scope.ServiceProvider.GetRequiredService<IClickRecorder>();
+            for (var i = 0; i < 3; i++)
+            {
+                await recorder.RecordClickAsync(id, CancellationToken.None);
+            }
+        }
+
+        await using (var scope = _services.CreateAsyncScope())
+        {
+            var link = await Repository(scope).FindByNormalizedCodeAsync("clk123x", CancellationToken.None);
+            Assert.Equal(3, link!.ClickCount);
+        }
+    }
+
     private static IShortLinkRepository Repository(AsyncServiceScope scope) =>
         scope.ServiceProvider.GetRequiredService<IShortLinkRepository>();
 
