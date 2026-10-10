@@ -57,10 +57,11 @@ listed under "Changed tests" in that task, with the reason (research R10, spec S
 - [x] T004 Add the `ClickEvent` entity in src/UrlShortener.Domain/Links/ClickEvent.cs
   - **AC**: fields per data-model ("`ShortLinkId`", "`OccurredAtUtc`" UTC, "`ReferrerHost` ≤ 253 or null", "`UserAgentFamily` ≤ 16"); factory `ClickEvent.Create(linkId, occurredAtUtc, referer, userAgent)` applies T003's rules so raw values never reach the entity
   - **Tests**: tests/UrlShortener.UnitTests/Domain/ClickEventTests.cs: raw referer with path/query/credentials stored as host only; raw UA stored as family only; non-UTC time rejected
-- [ ] T005 Persistence and migration in src/UrlShortener.Infrastructure/Persistence/: `ClickEventConfiguration.cs`, `ExpiresAtUtc` mapping (UTC converter) in ShortLinkConfiguration.cs, `DbSet<ClickEvent>` in AppDbContext.cs; generate migration `AddExpiryAndClickEvents`
+- [x] T005 Persistence and migration in src/UrlShortener.Infrastructure/Persistence/: `ClickEventConfiguration.cs`, `ExpiresAtUtc` mapping (UTC converter) in ShortLinkConfiguration.cs, `DbSet<ClickEvent>` in AppDbContext.cs; generate migration `AddExpiryAndClickEvents`
   - **AC**: remove the temporary `Ignore(ExpiresAtUtc)` from T002 and map it with the UTC converter; schema exactly as data-model: `ShortLinks.ExpiresAtUtc` TEXT NULL; `ClickEvents` with FK "ON DELETE CASCADE" and index "`IX_ClickEvents_ShortLinkId_OccurredAtUtc`"; Down drops both; no change to existing columns
   - **Tests**: tests/UrlShortener.IntegrationTests/Persistence/MigrationTests.cs: **seeded v1 database** — migrate to `InitialCreate`, insert a link with `ClickCount` 7, migrate to latest → link intact, `ClickCount` 7, `ExpiresAtUtc` null; deleting a link cascades its click events; Down then Up round-trip succeeds
   - **Sign-off**: DB migration
+  - **Change during implementation**: the generated migration trips analyzer CA1861 (constant array for the index columns), which warnings-as-errors turns into a build failure. `.editorconfig` disables only CA1861, only for `Persistence/Migrations/*.cs`, so generated migrations stay exactly as `dotnet ef` wrote them
 
 **Checkpoint**: schema and domain ready; all feature 001 tests still pass unchanged
 
