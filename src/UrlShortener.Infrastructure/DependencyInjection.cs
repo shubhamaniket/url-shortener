@@ -22,6 +22,7 @@ public static class DependencyInjection
             provider.GetRequiredService<IConfiguration>().GetConnectionString("Default") ?? DefaultConnectionString));
         services.AddScoped<IShortLinkRepository, ShortLinkRepository>();
         services.AddSingleton<IShortCodeGenerator, Base62CodeGenerator>();
+        services.AddScoped<IClickRecorder, DbClickRecorder>();
 
         return services;
     }

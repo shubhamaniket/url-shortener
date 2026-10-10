@@ -10,6 +10,7 @@ namespace UrlShortener.Application.Links;
 public sealed partial class LinkService(
     IShortLinkRepository repository,
     IShortCodeGenerator codeGenerator,
+    IClickRecorder clickRecorder,
     IOptions<ShortLinkOptions> options,
     TimeProvider timeProvider,
     ILogger<LinkService> logger) : ILinkService
@@ -50,6 +51,36 @@ public sealed partial class LinkService(
         throw new CodeGenerationFailedException(MaxGenerationAttempts);
     }
 
+    public async Task<string?> ResolveForRedirectAsync(string code, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(code);
+
+        var link = await repository.FindByNormalizedCodeAsync(ShortLink.Normalize(code), cancellationToken);
+        if (link is null || !link.Matches(code))
+        {
+            return null;
+        }
+
+        // Temporary synchronous write (plan Complexity Tracking, Principle V); feature 002 moves
+        // click recording off the redirect path. Failures are isolated here so the redirect never
+        // depends on analytics.
+        try
+        {
+            await clickRecorder.RecordClickAsync(link.Id, cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            // Any other recording failure is isolated from the redirect (FR-015a).
+            LogClickRecordingFailed(logger, ex, link.Code);
+        }
+
+        return link.OriginalUrl;
+    }
+
     private LinkDetails ToDetails(ShortLink link) => new(
         link.Code,
         _settings.BuildShortUrl(link.Code),
@@ -60,6 +91,9 @@ public sealed partial class LinkService(
     // Log codes only: destination URLs can carry personal data in their query strings.
     [LoggerMessage(Level = LogLevel.Information, Message = "Created short link {Code}")]
     private static partial void LogLinkCreated(ILogger logger, string code);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Recording a click for {Code} failed; redirect continues")]
+    private static partial void LogClickRecordingFailed(ILogger logger, Exception exception, string code);
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Generated short code collided on attempt {Attempt}")]
     private static partial void LogCodeCollision(ILogger logger, int attempt);

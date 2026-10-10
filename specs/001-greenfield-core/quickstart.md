@@ -21,6 +21,10 @@ dotnet run --project src/UrlShortener.Api --launch-profile http   # http://local
 In Development the database file is created and migrated on startup. With `dotnet run --project`
 the working directory is the project folder, so the file is `src/UrlShortener.Api/urlshortener.db`
 (gitignored). Delete it to start with an empty database.
+
+EF Core creates the database in SQLite WAL mode, so recent writes live in `urlshortener.db-wal`
+next to it. Inspect it with `sqlite3 src/UrlShortener.Api/urlshortener.db` (reads the WAL
+automatically); if you copy it, copy the `.db`, `.db-wal` and `.db-shm` files together.
 Swagger UI: http://localhost:5058/swagger
 
 ## Manual validation scenarios

@@ -115,16 +115,18 @@ Clean-architecture projects from plan.md: `src/UrlShortener.{Domain,Application,
 
 **Independent Test**: seed a link (via US1 or directly in the database), GET `/{code}` → 302 to the exact original URL with `Cache-Control: no-store`; unknown code → 404 ProblemDetails; a failing click recorder never changes the 302.
 
-- [ ] T013 [US2] Implement click recording and resolution: src/UrlShortener.Infrastructure/Links/DbClickRecorder.cs (single atomic `ExecuteUpdateAsync` `ClickCount + 1`) and `LinkService.ResolveForRedirectAsync` in src/UrlShortener.Application/Links/LinkService.cs
+- [x] T013 [US2] Implement click recording and resolution: src/UrlShortener.Infrastructure/Links/DbClickRecorder.cs (single atomic `ExecuteUpdateAsync` `ClickCount + 1`) and `LinkService.ResolveForRedirectAsync` in src/UrlShortener.Application/Links/LinkService.cs
   - **AC**: lookup by normalized code + `ShortLink.Matches`; returns original URL or `null`; recorder awaited inside `try/catch` that logs via `[LoggerMessage]` (code only) and swallows every exception except `OperationCanceledException` (FR-015a, research R6)
+  - **Changes during implementation**: cancellation propagates only when the *request* token is cancelled (`catch ... when (cancellationToken.IsCancellationRequested)`); an `OperationCanceledException` raised by the recorder itself (e.g. its own timeout) is treated like any other failure and the redirect continues. Added an integration test for the real `DbClickRecorder` (3 clicks → stored count 3). Failure isolation mutation-checked
   - **Tests**: tests/UrlShortener.UnitTests/Application/ResolveLinkTests.cs — found → URL and recorder called once; throwing recorder → URL still returned and failure logged; unknown → `null`, recorder not called; generated code in wrong case → `null`; captured log messages for a recorder failure contain the code but not the original URL (FR-021, constitution IV — no IP is available to the service layer by design)
   - **Sign-off**: redirect path
-- [ ] T014 [US2] Add src/UrlShortener.Api/Controllers/RedirectController.cs: `[HttpGet("{code:regex(^[[A-Za-z0-9_-]]{{3,30}}$)}")]`, `[ApiExplorerSettings(IgnoreApi = true)]`, 302 via `Redirect(url)` plus `Cache-Control: no-store`, `NotFound()` otherwise
+- [x] T014 [US2] Add src/UrlShortener.Api/Controllers/RedirectController.cs: `[HttpGet("{code:regex(^[[A-Za-z0-9_-]]{{3,30}}$)}")]`, `[ApiExplorerSettings(IgnoreApi = true)]`, 302 via `Redirect(url)` plus `Cache-Control: no-store`, `NotFound()` otherwise
   - **AC**: `/health` and `/api/...` routes are unaffected; no `DbContext` in the controller
   - **Tests**: tests/UrlShortener.IntegrationTests/RedirectTests.cs (client with `AllowAutoRedirect = false`) — 302 with exact `Location` and `Cache-Control: no-store`; unknown code → 404 problem+json; generated code in wrong case → 404; path failing the constraint (e.g. `/a.b`) → 404; after 3 redirects the stored `ClickCount` is 3 (read via a DbContext scope from `ApiFactory`); with a throwing `IClickRecorder` swapped in, redirect is still 302 (SC-003a)
   - **Sign-off**: redirect path
-- [ ] T015 [US2] Add concurrent click counting test in tests/UrlShortener.IntegrationTests/ConcurrencyTests.cs
+- [x] T015 [US2] Add concurrent click counting test in tests/UrlShortener.IntegrationTests/ConcurrencyTests.cs
   - **AC / Tests**: 20 parallel `GET /{code}` → all 302 and stored `ClickCount` exactly 20 (SC-003, no lost increments)
+  - **Verification**: passed 5/5 runs; mutation check with a read-then-write recorder stored 1 instead of 20, so the test does detect lost updates
 
 **Checkpoint**: US1 + US2 = create and follow links
 
