@@ -1,0 +1,107 @@
+# URL Shortener — sample requests (quickstart scenarios 1–12)
+#
+# Run with the VS Code "REST Client" extension (humao.rest-client): click "Send Request" above
+# each request, top to bottom. Later requests reuse the code returned by earlier ones.
+# Start the API first:  dotnet run --project src/UrlShortener.Api --launch-profile http
+# Contract: specs/001-greenfield-core/contracts/openapi.yaml
+
+@baseUrl = http://localhost:5058
+
+# Custom aliases are unique ignoring case, so a second run returns 409 for scenario 4.
+# Change these two values (same letters, different case) or delete the dev database to re-run.
+@alias = Team-Offsite-Demo
+@aliasOtherCase = team-offsite-demo
+
+### 1. Create a short link (generated code) → 201, Location header, clickCount 0
+# @name create
+POST {{baseUrl}}/api/links
+Content-Type: application/json
+
+{
+  "url": "https://example.com/some/long/path?x=1"
+}
+
+### 2. Follow the short link → 302 to the original URL, Cache-Control: no-store
+# REST Client follows redirects by default; set "rest-client.followredirect": false to see the 302.
+GET {{baseUrl}}/{{create.response.body.$.code}}
+
+### 3. Link details → clickCount reflects the redirects above (reading details is not a click)
+GET {{baseUrl}}/api/links/{{create.response.body.$.code}}
+
+### 4a. Custom alias → 201 with the alias as the code (case kept)
+# @name createAlias
+POST {{baseUrl}}/api/links
+Content-Type: application/json
+
+{
+  "url": "https://example.com/offsite",
+  "customAlias": "{{alias}}"
+}
+
+### 4b. Aliases resolve in any letter case → 302
+GET {{baseUrl}}/{{aliasOtherCase}}
+
+### 5. Same alias in another letter case → 409 ProblemDetails "Alias already in use"
+POST {{baseUrl}}/api/links
+Content-Type: application/json
+
+{
+  "url": "https://example.com/other",
+  "customAlias": "{{aliasOtherCase}}"
+}
+
+### 6. Unsupported scheme → 400, errors.url
+POST {{baseUrl}}/api/links
+Content-Type: application/json
+
+{
+  "url": "javascript:alert(1)"
+}
+
+### 7. Missing scheme → 400 with the hint "Did you mean https://www.example.com/page?"
+POST {{baseUrl}}/api/links
+Content-Type: application/json
+
+{
+  "url": "www.example.com/page"
+}
+
+### 8. User info disguising the real host → 400
+POST {{baseUrl}}/api/links
+Content-Type: application/json
+
+{
+  "url": "https://google.com@evil.example/login"
+}
+
+### 9. Points at the shortener itself (any case/port) → 400
+POST {{baseUrl}}/api/links
+Content-Type: application/json
+
+{
+  "url": "http://LOCALHOST:5058/x"
+}
+
+### 10. Forged Host header → 201, shortUrl still on the configured base URL
+POST {{baseUrl}}/api/links
+Host: evil.example
+Content-Type: application/json
+
+{
+  "url": "https://example.com/forged-host"
+}
+
+### 11. Unknown code → 404 ProblemDetails
+GET {{baseUrl}}/zzzzzzz
+
+### 12. Health (service + database) → 200 Healthy
+GET {{baseUrl}}/health
+
+### Extra: reserved alias → 400, errors.customAlias
+POST {{baseUrl}}/api/links
+Content-Type: application/json
+
+{
+  "url": "https://example.com",
+  "customAlias": "API"
+}
