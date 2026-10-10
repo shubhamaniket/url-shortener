@@ -38,7 +38,7 @@ listed under "Changed tests" in that task, with the reason (research R10, spec S
 
 ## Phase 1: Setup
 
-- [ ] T001 Record the regression baseline: run the full suite on this branch before any code change and write the counts into docs/scenarios/02-brownfield.md (new "Regression baseline" note in section 6)
+- [x] T001 Record the regression baseline: run the full suite on this branch before any code change and write the counts into docs/scenarios/02-brownfield.md (new "Regression baseline" note in section 6)
   - **AC**: counts match `main` (131 unit + 64 integration, 0 failures); no code changed
 
 ---
@@ -47,19 +47,21 @@ listed under "Changed tests" in that task, with the reason (research R10, spec S
 
 **Purpose**: Domain additions and the schema every story needs
 
-- [ ] T002 Add expiry to the `ShortLink` entity in src/UrlShortener.Domain/Links/ShortLink.cs: nullable `ExpiresAtUtc`, `IsExpiredAt(DateTime nowUtc)`, optional `expiresAtUtc` argument on both factories
+- [x] T002 Add expiry to the `ShortLink` entity in src/UrlShortener.Domain/Links/ShortLink.cs: nullable `ExpiresAtUtc`, `IsExpiredAt(DateTime nowUtc)`, optional `expiresAtUtc` argument on both factories
   - **AC**: "Null = never expires"; expired when "`ExpiresAtUtc <= now`"; expiry must be UTC and later than `CreatedAtUtc` (`ArgumentException` otherwise); existing factory calls without expiry compile unchanged
   - **Tests**: extend tests/UrlShortener.UnitTests/Domain/ShortLinkTests.cs: no expiry never expires; expired exactly at and after the instant, not before; non-UTC or not-after-creation expiry rejected. Existing `ShortLinkTests` pass unchanged
-- [ ] T003 [P] Add privacy-reducing rules in src/UrlShortener.Domain/Links/ReferrerHost.cs and src/UrlShortener.Domain/Links/UserAgentFamily.cs (research R3, data-model tables)
+  - **Change during implementation**: EF Core maps public properties by convention, so the new property broke every query (`no such column: ExpiresAtUtc`) before the migration existed. `ShortLinkConfiguration` ignores `ExpiresAtUtc` until T005 maps it together with the migration, keeping the schema change in one reviewed migration and every commit green
+- [x] T003 [P] Add privacy-reducing rules in src/UrlShortener.Domain/Links/ReferrerHost.cs and src/UrlShortener.Domain/Links/UserAgentFamily.cs (research R3, data-model tables)
   - **AC**: `ReferrerHost.From`: absolute http/https → lower-cased host (≤ 253), credentials/path/query dropped; anything else → `null`. `UserAgentFamily.From`: ordered rules "`Bot` → `Edge` → `Firefox` → `Chrome` → `Safari` → `Other`", missing → `Other`
   - **Tests**: tests/UrlShortener.UnitTests/Domain/ReferrerHostTests.cs (every row of the data-model ReferrerHost table) and UserAgentFamilyTests.cs (real UA strings: Chrome, Edge, Firefox, Safari macOS/iOS, Chrome iOS `CriOS`, Googlebot, Slackbot, facebookexternalhit, WhatsApp preview, curl → Other, empty → Other)
-- [ ] T004 Add the `ClickEvent` entity in src/UrlShortener.Domain/Links/ClickEvent.cs
+- [x] T004 Add the `ClickEvent` entity in src/UrlShortener.Domain/Links/ClickEvent.cs
   - **AC**: fields per data-model ("`ShortLinkId`", "`OccurredAtUtc`" UTC, "`ReferrerHost` ≤ 253 or null", "`UserAgentFamily` ≤ 16"); factory `ClickEvent.Create(linkId, occurredAtUtc, referer, userAgent)` applies T003's rules so raw values never reach the entity
   - **Tests**: tests/UrlShortener.UnitTests/Domain/ClickEventTests.cs: raw referer with path/query/credentials stored as host only; raw UA stored as family only; non-UTC time rejected
-- [ ] T005 Persistence and migration in src/UrlShortener.Infrastructure/Persistence/: `ClickEventConfiguration.cs`, `ExpiresAtUtc` mapping (UTC converter) in ShortLinkConfiguration.cs, `DbSet<ClickEvent>` in AppDbContext.cs; generate migration `AddExpiryAndClickEvents`
-  - **AC**: schema exactly as data-model: `ShortLinks.ExpiresAtUtc` TEXT NULL; `ClickEvents` with FK "ON DELETE CASCADE" and index "`IX_ClickEvents_ShortLinkId_OccurredAtUtc`"; Down drops both; no change to existing columns
+- [x] T005 Persistence and migration in src/UrlShortener.Infrastructure/Persistence/: `ClickEventConfiguration.cs`, `ExpiresAtUtc` mapping (UTC converter) in ShortLinkConfiguration.cs, `DbSet<ClickEvent>` in AppDbContext.cs; generate migration `AddExpiryAndClickEvents`
+  - **AC**: remove the temporary `Ignore(ExpiresAtUtc)` from T002 and map it with the UTC converter; schema exactly as data-model: `ShortLinks.ExpiresAtUtc` TEXT NULL; `ClickEvents` with FK "ON DELETE CASCADE" and index "`IX_ClickEvents_ShortLinkId_OccurredAtUtc`"; Down drops both; no change to existing columns
   - **Tests**: tests/UrlShortener.IntegrationTests/Persistence/MigrationTests.cs: **seeded v1 database** — migrate to `InitialCreate`, insert a link with `ClickCount` 7, migrate to latest → link intact, `ClickCount` 7, `ExpiresAtUtc` null; deleting a link cascades its click events; Down then Up round-trip succeeds
   - **Sign-off**: DB migration
+  - **Change during implementation**: the generated migration trips analyzer CA1861 (constant array for the index columns), which warnings-as-errors turns into a build failure. `.editorconfig` disables only CA1861, only for `Persistence/Migrations/*.cs`, so generated migrations stay exactly as `dotnet ef` wrote them
 
 **Checkpoint**: schema and domain ready; all feature 001 tests still pass unchanged
 

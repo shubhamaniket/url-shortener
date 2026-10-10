@@ -41,5 +41,11 @@ internal sealed class ShortLinkConfiguration : IEntityTypeConfiguration<ShortLin
 
         builder.Property(link => link.ClickCount)
             .IsRequired();
+
+        // Null means the link never expires; read back as UTC like CreatedAtUtc.
+        builder.Property(link => link.ExpiresAtUtc)
+            .HasConversion(
+                value => value,
+                value => value.HasValue ? DateTime.SpecifyKind(value.Value, DateTimeKind.Utc) : value);
     }
 }

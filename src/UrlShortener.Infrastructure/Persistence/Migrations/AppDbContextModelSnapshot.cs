@@ -17,6 +17,35 @@ namespace UrlShortener.Infrastructure.Persistence.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.31");
 
+            modelBuilder.Entity("UrlShortener.Domain.Links.ClickEvent", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("OccurredAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ReferrerHost")
+                        .HasMaxLength(253)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("ShortLinkId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("UserAgentFamily")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ShortLinkId", "OccurredAtUtc")
+                        .HasDatabaseName("IX_ClickEvents_ShortLinkId_OccurredAtUtc");
+
+                    b.ToTable("ClickEvents", (string)null);
+                });
+
             modelBuilder.Entity("UrlShortener.Domain.Links.ShortLink", b =>
                 {
                     b.Property<long>("Id")
@@ -32,6 +61,9 @@ namespace UrlShortener.Infrastructure.Persistence.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ExpiresAtUtc")
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("IsCustomAlias")
@@ -54,6 +86,15 @@ namespace UrlShortener.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("IX_ShortLinks_NormalizedCode");
 
                     b.ToTable("ShortLinks", (string)null);
+                });
+
+            modelBuilder.Entity("UrlShortener.Domain.Links.ClickEvent", b =>
+                {
+                    b.HasOne("UrlShortener.Domain.Links.ShortLink", null)
+                        .WithMany()
+                        .HasForeignKey("ShortLinkId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }
