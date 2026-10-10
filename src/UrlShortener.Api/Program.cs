@@ -1,5 +1,6 @@
 using System.Diagnostics;
 
+using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
 using Microsoft.Extensions.Options;
 
 using UrlShortener.Api.Configuration;
@@ -11,7 +12,9 @@ using UrlShortener.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+// Validation error keys use the JSON (camelCase) names, matching the Domain's field names.
+builder.Services.AddControllers(options =>
+    options.ModelMetadataDetailsProviders.Add(new SystemTextJsonValidationMetadataProvider()));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHealthChecks();
