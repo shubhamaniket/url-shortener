@@ -194,7 +194,8 @@ Clean-architecture projects from plan.md: `src/UrlShortener.{Domain,Application,
   - **AC**: every scenario gives the expected result; measured p95 recorded (real number) for the scenario doc
   - **Result (2026-10-11)**: Release build on a fresh database: scenarios 1–12 19/19 automated checks passed; SC-004 p95 0.9 ms over 200 redirects (p50 0.6, p99 1.0, max 1.1 ms; Apple M4, single local client); 223 redirects counted exactly. Engineer manually verified Swagger (create, redirect, details), Postman import of openapi.yaml (400 example, 302 with redirects off), custom aliases, and click counting
 - [x] T024 Write docs/scenarios/01-greenfield.md with sections: 1 requirement as given, 2 interpretation and clarifications (link spec.md Clarifications), 3 impact analysis (n/a for greenfield; state why), 4 task decomposition (link this file), 5 execution (commits, AI involvement, notable decisions), 6 validation (real test counts, quickstart results, measured p95), 7 risks and trade-offs, 8 outcome and next steps
-- [ ] T025 Open PR `001-greenfield-core` → `main` using .github/pull_request_template.md; complete sign-off for the migration (T006), redirect path (T013, T014), validation (T009, T016), and dependencies (T001); merge after CI is green
+- [x ] T025 Open PR `001-greenfield-core` → `main` using .github/pull_request_template.md; complete sign-off for the migration (T006), redirect path (T013, T014), validation (T009, T016), and dependencies (T001); merge after CI is green
+  - **How it was done**: delivered as one PR per task phase from branch `001-greenfield-impl` (#2–#4 setup, #5 foundational, #6 US1, #7 US2, #8 US3, #9 US4, #10 US5) plus a final Polish PR (T021–T025), each using the PR template. Sign-offs recorded before each commit and in the PR descriptions: migration (T006), redirect path (T013, T014), validation (T009, T016), dependencies (T001, T011). Merging the Polish PR is done by the engineer after CI is green
 
 ---
 
