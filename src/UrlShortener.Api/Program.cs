@@ -1,6 +1,9 @@
+using System.Diagnostics;
+
 using Microsoft.Extensions.Options;
 
 using UrlShortener.Api.Configuration;
+using UrlShortener.Api.ErrorHandling;
 using UrlShortener.Application.Options;
 using UrlShortener.Infrastructure;
 using UrlShortener.Infrastructure.Persistence;
@@ -11,6 +14,9 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHealthChecks();
+builder.Services.AddProblemDetails(options => options.CustomizeProblemDetails = context =>
+    context.ProblemDetails.Extensions.TryAdd("traceId", Activity.Current?.Id ?? context.HttpContext.TraceIdentifier));
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 builder.Services.AddOptions<ShortLinkOptions>()
     .Bind(builder.Configuration.GetSection(ShortLinkOptions.SectionName))
@@ -20,6 +26,9 @@ builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddInfrastructure();
 
 var app = builder.Build();
+
+app.UseExceptionHandler();
+app.UseStatusCodePages();
 
 if (app.Environment.IsDevelopment() || app.Configuration.GetValue<bool>("Database:MigrateOnStartup"))
 {
