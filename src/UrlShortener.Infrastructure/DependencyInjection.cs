@@ -11,11 +11,14 @@ public static class DependencyInjection
 {
     public const string DefaultConnectionString = "Data Source=urlshortener.db";
 
-    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
+    /// <remarks>
+    /// The connection string is read when the context is first created, not at registration, so
+    /// configuration added after service registration (e.g. by test hosts) is honoured.
+    /// </remarks>
+    public static IServiceCollection AddInfrastructure(this IServiceCollection services)
     {
-        var connectionString = configuration.GetConnectionString("Default") ?? DefaultConnectionString;
-
-        services.AddDbContext<AppDbContext>(options => options.UseSqlite(connectionString));
+        services.AddDbContext<AppDbContext>((provider, options) => options.UseSqlite(
+            provider.GetRequiredService<IConfiguration>().GetConnectionString("Default") ?? DefaultConnectionString));
         services.AddScoped<IShortLinkRepository, ShortLinkRepository>();
 
         return services;

@@ -18,7 +18,9 @@ dotnet test
 dotnet run --project src/UrlShortener.Api --launch-profile http   # http://localhost:5058
 ```
 
-In Development the database file `urlshortener.db` is created and migrated on startup.
+In Development the database file is created and migrated on startup. With `dotnet run --project`
+the working directory is the project folder, so the file is `src/UrlShortener.Api/urlshortener.db`
+(gitignored). Delete it to start with an empty database.
 Swagger UI: http://localhost:5058/swagger
 
 ## Manual validation scenarios

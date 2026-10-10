@@ -27,7 +27,10 @@ public sealed class ShortLinkRepositoryTests : IAsyncLifetime
             })
             .Build();
 
-        _services = new ServiceCollection().AddInfrastructure(configuration).BuildServiceProvider();
+        _services = new ServiceCollection()
+            .AddSingleton<IConfiguration>(configuration)
+            .AddInfrastructure()
+            .BuildServiceProvider();
 
         await using var scope = _services.CreateAsyncScope();
         await scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.MigrateAsync();

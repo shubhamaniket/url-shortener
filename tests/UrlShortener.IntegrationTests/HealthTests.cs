@@ -1,13 +1,8 @@
 using System.Net;
 
-using Microsoft.AspNetCore.Mvc.Testing;
-
-using Xunit;
-
 namespace UrlShortener.IntegrationTests;
 
-public class HealthTests(WebApplicationFactory<Program> factory)
-    : IClassFixture<WebApplicationFactory<Program>>
+public class HealthTests(ApiFactory factory) : IClassFixture<ApiFactory>
 {
     [Fact]
     public async Task HealthEndpointReturnsOk()
