@@ -190,8 +190,9 @@ Clean-architecture projects from plan.md: `src/UrlShortener.{Domain,Application,
 - [x] T022 [P] Create requests.http at the repository root covering quickstart scenarios 1–12, and delete the template src/UrlShortener.Api/UrlShortener.Api.http
   - **AC**: runnable top to bottom with the VS Code REST Client against `http://localhost:5058`
   - **Verification**: all 14 requests executed against the running app with the expected statuses and bodies (a throwaway parser in the session scratchpad, not committed); requests chain the created code via `# @name` response variables
-- [ ] T023 Run the quickstart validation (specs/001-greenfield-core/quickstart.md): manual scenarios 1–12, Postman import of contracts/openapi.yaml, SC-004 latency loop
+- [x] T023 Run the quickstart validation (specs/001-greenfield-core/quickstart.md): manual scenarios 1–12, Postman import of contracts/openapi.yaml, SC-004 latency loop
   - **AC**: every scenario gives the expected result; measured p95 recorded (real number) for the scenario doc
+  - **Result (2026-10-11)**: Release build on a fresh database: scenarios 1–12 19/19 automated checks passed; SC-004 p95 0.9 ms over 200 redirects (p50 0.6, p99 1.0, max 1.1 ms; Apple M4, single local client); 223 redirects counted exactly. Engineer manually verified Swagger (create, redirect, details), Postman import of openapi.yaml (400 example, 302 with redirects off), custom aliases, and click counting
 - [ ] T024 Write docs/scenarios/01-greenfield.md with sections: 1 requirement as given, 2 interpretation and clarifications (link spec.md Clarifications), 3 impact analysis (n/a for greenfield; state why), 4 task decomposition (link this file), 5 execution (commits, AI involvement, notable decisions), 6 validation (real test counts, quickstart results, measured p95), 7 risks and trade-offs, 8 outcome and next steps
 - [ ] T025 Open PR `001-greenfield-core` → `main` using .github/pull_request_template.md; complete sign-off for the migration (T006), redirect path (T013, T014), validation (T009, T016), and dependencies (T001); merge after CI is green
 
