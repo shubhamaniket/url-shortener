@@ -41,5 +41,9 @@ internal sealed class ShortLinkConfiguration : IEntityTypeConfiguration<ShortLin
 
         builder.Property(link => link.ClickCount)
             .IsRequired();
+
+        // Not persisted yet: mapped together with its column in migration AddExpiryAndClickEvents
+        // (feature 002, T005), so the schema changes in one reviewed migration.
+        builder.Ignore(link => link.ExpiresAtUtc);
     }
 }

@@ -21,7 +21,7 @@ public sealed class ShortLink
         OriginalUrl = string.Empty;
     }
 
-    private ShortLink(string code, bool isCustomAlias, string originalUrl, DateTime createdAtUtc)
+    private ShortLink(string code, bool isCustomAlias, string originalUrl, DateTime createdAtUtc, DateTime? expiresAtUtc)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(originalUrl);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(originalUrl.Length, MaxUrlLength, nameof(originalUrl));
@@ -34,7 +34,13 @@ public sealed class ShortLink
         NormalizedCode = Normalize(code);
         IsCustomAlias = isCustomAlias;
         OriginalUrl = originalUrl;
+        if (expiresAtUtc is { } expiry && (expiry.Kind != DateTimeKind.Utc || expiry <= createdAtUtc))
+        {
+            throw new ArgumentException("Expiry must be a UTC time after the creation time.", nameof(expiresAtUtc));
+        }
+
         CreatedAtUtc = createdAtUtc;
+        ExpiresAtUtc = expiresAtUtc;
     }
 
     public long Id { get; private set; }
@@ -51,9 +57,13 @@ public sealed class ShortLink
 
     public DateTime CreatedAtUtc { get; private set; }
 
+    /// <summary>When the link stops redirecting; <c>null</c> means it never expires.</summary>
+    public DateTime? ExpiresAtUtc { get; private set; }
+
     public long ClickCount { get; private set; }
 
-    public static ShortLink CreateWithGeneratedCode(string code, string originalUrl, DateTime createdAtUtc)
+    public static ShortLink CreateWithGeneratedCode(
+        string code, string originalUrl, DateTime createdAtUtc, DateTime? expiresAtUtc = null)
     {
         if (!GeneratedCode.IsValid(code))
         {
@@ -61,17 +71,21 @@ public sealed class ShortLink
                 $"A generated code must be {GeneratedCode.Length} Base62 characters.", nameof(code));
         }
 
-        return new ShortLink(code, isCustomAlias: false, originalUrl, createdAtUtc);
+        return new ShortLink(code, isCustomAlias: false, originalUrl, createdAtUtc, expiresAtUtc);
     }
 
-    public static ShortLink CreateWithCustomAlias(string alias, string originalUrl, DateTime createdAtUtc)
+    public static ShortLink CreateWithCustomAlias(
+        string alias, string originalUrl, DateTime createdAtUtc, DateTime? expiresAtUtc = null)
     {
         ArgumentNullException.ThrowIfNull(alias);
         ArgumentOutOfRangeException.ThrowIfLessThan(alias.Length, MinCodeLength, nameof(alias));
         ArgumentOutOfRangeException.ThrowIfGreaterThan(alias.Length, MaxCodeLength, nameof(alias));
 
-        return new ShortLink(alias, isCustomAlias: true, originalUrl, createdAtUtc);
+        return new ShortLink(alias, isCustomAlias: true, originalUrl, createdAtUtc, expiresAtUtc);
     }
+
+    /// <summary>Whether the link has expired at <paramref name="nowUtc"/> (at or after its expiry time).</summary>
+    public bool IsExpiredAt(DateTime nowUtc) => ExpiresAtUtc is { } expiry && nowUtc >= expiry;
 
     /// <summary>The form used for uniqueness and lookup.</summary>
     public static string Normalize(string code)

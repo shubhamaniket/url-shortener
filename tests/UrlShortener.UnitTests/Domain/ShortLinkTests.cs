@@ -111,4 +111,52 @@ public class ShortLinkTests
 
         Assert.Throws<ArgumentException>(() => ShortLink.CreateWithGeneratedCode("Abc123x", Url, createdAt));
     }
+
+    [Fact]
+    public void LinkWithoutExpiryNeverExpires()
+    {
+        var link = ShortLink.CreateWithGeneratedCode("Abc123x", Url, CreatedAt);
+
+        Assert.Null(link.ExpiresAtUtc);
+        Assert.False(link.IsExpiredAt(DateTime.MaxValue.ToUniversalTime()));
+    }
+
+    [Fact]
+    public void LinkExpiresExactlyAtAndAfterItsExpiryTime()
+    {
+        var expiresAt = CreatedAt.AddHours(1);
+        var link = ShortLink.CreateWithCustomAlias("team-offsite", Url, CreatedAt, expiresAt);
+
+        Assert.Equal(expiresAt, link.ExpiresAtUtc);
+        Assert.False(link.IsExpiredAt(expiresAt.AddTicks(-1)));
+        Assert.True(link.IsExpiredAt(expiresAt));
+        Assert.True(link.IsExpiredAt(expiresAt.AddDays(1)));
+    }
+
+    [Fact]
+    public void GeneratedCodeLinkCanHaveExpiry()
+    {
+        var link = ShortLink.CreateWithGeneratedCode("Abc123x", Url, CreatedAt, CreatedAt.AddMinutes(5));
+
+        Assert.Equal(CreatedAt.AddMinutes(5), link.ExpiresAtUtc);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-60)]
+    public void ExpiryMustBeAfterCreation(int secondsAfterCreation)
+    {
+        Assert.Throws<ArgumentException>(() =>
+            ShortLink.CreateWithGeneratedCode("Abc123x", Url, CreatedAt, CreatedAt.AddSeconds(secondsAfterCreation)));
+    }
+
+    [Theory]
+    [InlineData(DateTimeKind.Local)]
+    [InlineData(DateTimeKind.Unspecified)]
+    public void ExpiryMustBeUtc(DateTimeKind kind)
+    {
+        var expiresAt = DateTime.SpecifyKind(CreatedAt.AddHours(1), kind);
+
+        Assert.Throws<ArgumentException>(() => ShortLink.CreateWithGeneratedCode("Abc123x", Url, CreatedAt, expiresAt));
+    }
 }
