@@ -5,7 +5,7 @@ It supports the "AI-assisted execution and traceability" requirement.
 
 ## Summary
 - **Tools used:** Claude (claude.ai chat) for planning, design review, and setup guidance; Claude Code via GitHub Spec Kit (`--integration claude`) for spec-driven implementation
-- **Entries so far:** 13 | Accepted: 7 | Edited: 5 | Rejected: 1
+- **Entries so far:** 14 | Accepted: 8 | Edited: 5 | Rejected: 1
 - **Key lessons so far:**
   - AI knowledge of fast-moving CLI tools can be out of date. Verify flags against the tool's `--help` (Spec Kit `--ai` → `--integration`).
   - AI-generated shell commands may not account for the local shell (zsh globbing). Run, read the error, fix.
@@ -34,3 +34,4 @@ It supports the "AI-assisted execution and traceability" requirement.
 | 11 | 2026-10-10 01:21 | P0-setup | setup | Add `Microsoft.AspNetCore.Mvc.Testing` package | Command used `--version 8.0.*` unquoted | Edited | Failed in zsh (`no matches found`), because zsh treats `*` as a glob. Fixed by quoting: `--version "8.0.*"` | `<hash>` |
 | 12 | 2026-10-10 01:31 | P0-setup | impl/test | Add `/health` endpoint and first integration test | `AddHealthChecks()` + `MapHealthChecks("/health")`, `public partial class Program {}`, `WebApplicationFactory` test | Accepted | Reviewed placement in `Program.cs`. Test named without underscores and uses the `Uri` overload to satisfy analyzers (warnings are errors). Test passes locally. | `<hash>` |
 | 13 | 2026-10-10 01:37 | P0-setup | setup | Basic CI workflow + PR template | GitHub Actions restore → build → test; installs both .NET 8 and 9 SDKs; PR template with quality gates and sign-off checklist | Accepted | Both SDKs installed so CI uses the same analyzers as my local .NET 9 SDK build, avoiding local/CI drift | `<hash>` |
+| 14 | 2026-10-10 17:50 | P1-constitution | docs | Run `/speckit.constitution` with my 9 principles (plan §5.1) | Constitution v1.0.0: 9 principles as MUST rules with rationale, plus Technology Constraints, Development Workflow, and Governance sections. Also folded in some of my plan's ground rules (AI trailer, AI log, behavior-asserting tests, FluentAssertions v8+ ban) and kept "fast redirect" behavioral instead of inventing a latency number | Accepted | Reviewed every principle for testable wording and no leftover placeholders. Removed the generated Sync Impact Report comment before committing | `<hash>` |
