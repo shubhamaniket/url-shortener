@@ -69,10 +69,11 @@ Table `ShortLinks`:
 | `IsCustomAlias` | INTEGER | NOT NULL |
 | `OriginalUrl` | TEXT | NOT NULL, max 2048 |
 | `CreatedAtUtc` | TEXT | NOT NULL |
-| `ClickCount` | INTEGER | NOT NULL, default 0 |
+| `ClickCount` | INTEGER | NOT NULL (always written as 0 by the entity on insert; no database default) |
 
 The unique index serves both uniqueness (R2/R3) and the redirect lookup, so no second index is
-needed.
+needed. SQLite does not enforce `TEXT` lengths; the 30 / 2048 limits are enforced by the
+Domain entity and kept in the schema as documentation for a future move to another database.
 
 `CreatedAtUtc` is stored as TEXT by the SQLite provider and read back with an unspecified
 `DateTimeKind`; a value converter marks it as UTC so the API always returns an ISO 8601 value
