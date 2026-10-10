@@ -1,16 +1,20 @@
 using System.Diagnostics;
 
+using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
 using Microsoft.Extensions.Options;
 
 using UrlShortener.Api.Configuration;
 using UrlShortener.Api.ErrorHandling;
+using UrlShortener.Application;
 using UrlShortener.Application.Options;
 using UrlShortener.Infrastructure;
 using UrlShortener.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+// Validation error keys use the JSON (camelCase) names, matching the Domain's field names.
+builder.Services.AddControllers(options =>
+    options.ModelMetadataDetailsProviders.Add(new SystemTextJsonValidationMetadataProvider()));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHealthChecks();
@@ -23,6 +27,7 @@ builder.Services.AddOptions<ShortLinkOptions>()
     .ValidateOnStart();
 builder.Services.AddSingleton<IValidateOptions<ShortLinkOptions>, ShortLinkOptionsValidator>();
 builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddApplication();
 builder.Services.AddInfrastructure();
 
 var app = builder.Build();

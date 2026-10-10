@@ -28,7 +28,7 @@ Swagger UI: http://localhost:5058/swagger
 | # | Scenario | Command | Expected |
 |---|---|---|---|
 | 1 | Create (generated code) | `curl -i -X POST localhost:5058/api/links -H 'Content-Type: application/json' -d '{"url":"https://example.com"}'` | 201, 7-char `code`, `shortUrl` on `http://localhost:5058`, `clickCount` 0, `Location` header |
-| 2 | Redirect | `curl -i localhost:5058/<code>` | 302, `Location: https://example.com`, `Cache-Control: no-store` |
+| 2 | Redirect | `curl -i localhost:5058/<code>` | 302, `Location: https://example.com/` (stored normalized form), `Cache-Control: no-store` |
 | 3 | Click count | Repeat #2 twice more, then `curl localhost:5058/api/links/<code>` | `clickCount` 3 |
 | 4 | Custom alias | POST with `"customAlias":"team-offsite"`, then `curl -i localhost:5058/TEAM-OFFSITE` | 201, then 302 |
 | 5 | Alias conflict | POST again with `"customAlias":"Team-Offsite"` | 409 ProblemDetails |

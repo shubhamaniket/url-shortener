@@ -12,7 +12,7 @@ A mapping from a short code to an original URL.
 | `Code` | `string` (3–30) | The code as created: a generated 7-char Base62 code or a custom alias in its original case | FR-006, FR-009, FR-012a |
 | `NormalizedCode` | `string` (3–30) | `Code` lower-cased (invariant culture). **Unique.** Set by the entity, never by callers | R3 |
 | `IsCustomAlias` | `bool` | `true` when created from a user alias; controls lookup case rules | FR-016 |
-| `OriginalUrl` | `string` (≤ 2048) | Validated destination (see rules below), stored trimmed, otherwise unchanged | FR-003–FR-005 |
+| `OriginalUrl` | `string` (≤ 2048) | Validated destination (see rules below), stored in its parsed, normalized form (`Uri.AbsoluteUri`, e.g. lower-case scheme/host, `/` added to a bare host) so the redirect goes to exactly what was validated | FR-003–FR-005 |
 | `CreatedAtUtc` | `DateTime` (UTC) | Set once at creation from `TimeProvider` | FR-002 |
 | `ClickCount` | `long` | Starts at 0; only increased by the click recorder, by exactly 1 per recorded click | FR-015 |
 
