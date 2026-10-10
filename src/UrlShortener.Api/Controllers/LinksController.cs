@@ -5,7 +5,7 @@ using UrlShortener.Application.Links;
 
 namespace UrlShortener.Api.Controllers;
 
-/// <summary>Create short links. Thin: maps HTTP to <see cref="ILinkService"/>; errors are handled globally.</summary>
+/// <summary>Create short links and read their details. Thin: maps HTTP to <see cref="ILinkService"/>; errors are handled globally.</summary>
 [ApiController]
 [Route("api/links")]
 public sealed class LinksController(ILinkService linkService) : ControllerBase
@@ -24,5 +24,15 @@ public sealed class LinksController(ILinkService linkService) : ControllerBase
             new CreateLinkCommand(request.Url!, request.CustomAlias), cancellationToken);
 
         return Created(new Uri($"/api/links/{details.Code}", UriKind.Relative), LinkResponse.From(details));
+    }
+
+    /// <summary>Get a link's details and total click count. Public: knowing the code is enough.</summary>
+    [HttpGet("{code}")]
+    [ProducesResponseType<LinkResponse>(StatusCodes.Status200OK, "application/json")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<ActionResult<LinkResponse>> Get(string code, CancellationToken cancellationToken)
+    {
+        var details = await linkService.GetDetailsAsync(code, cancellationToken);
+        return details is null ? NotFound() : LinkResponse.From(details);
     }
 }

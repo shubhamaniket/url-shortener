@@ -160,9 +160,10 @@ Clean-architecture projects from plan.md: `src/UrlShortener.{Domain,Application,
 
 **Independent Test**: create, redirect 3 times, GET details → `clickCount` 3; GET details again → still 3.
 
-- [ ] T019 [US4] Implement `LinkService.GetDetailsAsync` in src/UrlShortener.Application/Links/LinkService.cs and `GET /api/links/{code}` in src/UrlShortener.Api/Controllers/LinksController.cs
+- [x] T019 [US4] Implement `LinkService.GetDetailsAsync` in src/UrlShortener.Application/Links/LinkService.cs and `GET /api/links/{code}` in src/UrlShortener.Api/Controllers/LinksController.cs
   - **AC**: same matching rule as redirect; 200 `LinkResponse` or 404 ProblemDetails; no credentials; never calls `IClickRecorder`; `[ProducesResponseType]` for 200 and 404
   - **Tests**: tests/UrlShortener.IntegrationTests/LinkDetailsTests.cs — new link → `clickCount` 0 and exactly the five fields `code`, `shortUrl`, `originalUrl`, `createdAtUtc` (ending in `Z`), `clickCount` (FR-018a); after 3 redirects → 3; reading details twice does not change the count; alias found in any case; unknown → 404 problem+json; `Location` from create resolves to this endpoint
+  - **Changes during implementation**: lookup + case rules extracted into one private `FindAsync` shared by redirect and details, so the two cannot drift apart
 
 **Checkpoint**: all link features complete
 

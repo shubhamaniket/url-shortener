@@ -67,10 +67,8 @@ public sealed partial class LinkService(
 
     public async Task<string?> ResolveForRedirectAsync(string code, CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(code);
-
-        var link = await repository.FindByNormalizedCodeAsync(ShortLink.Normalize(code), cancellationToken);
-        if (link is null || !link.Matches(code))
+        var link = await FindAsync(code, cancellationToken);
+        if (link is null)
         {
             return null;
         }
@@ -93,6 +91,21 @@ public sealed partial class LinkService(
         }
 
         return link.OriginalUrl;
+    }
+
+    public async Task<LinkDetails?> GetDetailsAsync(string code, CancellationToken cancellationToken)
+    {
+        var link = await FindAsync(code, cancellationToken);
+        return link is null ? null : ToDetails(link);
+    }
+
+    /// <summary>One indexed lookup, then the case rules: aliases in any case, generated codes exactly.</summary>
+    private async Task<ShortLink?> FindAsync(string code, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(code);
+
+        var link = await repository.FindByNormalizedCodeAsync(ShortLink.Normalize(code), cancellationToken);
+        return link is not null && link.Matches(code) ? link : null;
     }
 
     private LinkDetails ToDetails(ShortLink link) => new(
