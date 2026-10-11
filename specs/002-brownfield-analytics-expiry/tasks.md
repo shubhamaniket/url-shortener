@@ -144,7 +144,7 @@ listed under "Changed tests" in that task, with the reason (research R10, spec S
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T016 [P] Write docs/adr/005-async-click-recording.md (at-most-once, DropOldest, shutdown flush, orphan events after reclaim, drop logs delayed while the writer is blocked) and docs/adr/008-stored-click-count.md (stored vs derived, Clarification Q1)
+- [x] T016 [P] Write docs/adr/005-async-click-recording.md (at-most-once, DropOldest, shutdown flush, orphan events after reclaim, drop logs delayed while the writer is blocked) and docs/adr/008-stored-click-count.md (stored vs derived, Clarification Q1)
 - [ ] T017 [P] Extend requests.http with feature 002 scenarios (expiry, 410, expiry validation, reclaim, stats with Referer); update the root quickstart pointers
   - **AC**: every new request executed against the running app with the expected status
 - [ ] T018 Run specs/002-brownfield-analytics-expiry/quickstart.md: scenarios 1–10 on a database migrated from feature 001 data, privacy inspection of `ClickEvents`, latency loop (SC-002); engineer verifies Swagger and Postman (v0.2.0 contract) by hand
