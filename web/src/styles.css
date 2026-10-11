@@ -10,3 +10,24 @@ main {
   margin: 0 auto;
   padding: 1.5rem 1rem 3rem;
 }
+
+h1 { margin-bottom: 0.25rem; }
+h2 { margin-top: 2rem; font-size: 1.25rem; }
+
+.field { margin-bottom: 1rem; }
+label { display: block; font-weight: 600; margin-bottom: 0.25rem; }
+.optional, .hint, .meta { color: #59636e; font-weight: 400; }
+.hint, .field-error { margin: 0.25rem 0 0; font-size: 0.875rem; }
+input { width: 100%; box-sizing: border-box; padding: 0.5rem; font: inherit; border: 1px solid #8c959f; border-radius: 6px; }
+input[aria-invalid='true'] { border-color: #cf222e; }
+.field-error, .error { color: #cf222e; }
+
+button { font: inherit; padding: 0.5rem 1rem; border-radius: 6px; border: 1px solid #1f6feb; background: #1f6feb; color: #fff; cursor: pointer; }
+button.secondary { background: #fff; color: #1f6feb; }
+button:disabled { opacity: 0.6; cursor: progress; }
+:focus-visible { outline: 3px solid #fb8f44; outline-offset: 2px; }
+
+.result { margin-top: 1rem; padding: 1rem; border: 1px solid #d0d7de; border-radius: 6px; background: #f6f8fa; }
+.actions { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+.status { color: #1a7f37; }
+.long { overflow-wrap: anywhere; }
