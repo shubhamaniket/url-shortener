@@ -31,6 +31,7 @@ public sealed class LinksController(ILinkService linkService) : ControllerBase
 
     /// <summary>Get a link's details and total click count, also after it has expired. Public: knowing the code is enough.</summary>
     [HttpGet("{code}")]
+    [EnableRateLimiting(RateLimitPolicies.Read)]
     [ProducesResponseType<LinkResponse>(StatusCodes.Status200OK, "application/json")]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, "application/problem+json")]
     public async Task<ActionResult<LinkResponse>> Get(string code, CancellationToken cancellationToken)
@@ -42,6 +43,7 @@ public sealed class LinksController(ILinkService linkService) : ControllerBase
     /// <summary>Get click statistics: all-time total, clicks per UTC day for the last 30 days, and the top 5 referrers.</summary>
     /// <remarks>Public like details, also for expired links. Reading statistics is not a click.</remarks>
     [HttpGet("{code}/stats")]
+    [EnableRateLimiting(RateLimitPolicies.Read)]
     [ProducesResponseType<LinkStatsResponse>(StatusCodes.Status200OK, "application/json")]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, "application/problem+json")]
     public async Task<ActionResult<LinkStatsResponse>> GetStats(string code, CancellationToken cancellationToken)

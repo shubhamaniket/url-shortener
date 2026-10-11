@@ -65,7 +65,7 @@ unchanged.
 
 **Independent Test**: one client exceeds the redirect budget → 429 and no click recorded; another client still redirected; the first can still create and read.
 
-- [ ] T003 [US2] **redirect** (token bucket: `Redirect:BurstLimit` 60, `Redirect:TokensPerSecond` 2) and **read** (fixed window 60/60 s) policies; `[EnableRateLimiting("redirect")]` on `RedirectController`, `[EnableRateLimiting("read")]` on `LinksController.Get` and `GetStats`
+- [x] T003 [US2] **redirect** (token bucket: `Redirect:BurstLimit` 60, `Redirect:TokensPerSecond` 2) and **read** (fixed window 60/60 s) policies; `[EnableRateLimiting("redirect")]` on `RedirectController`, `[EnableRateLimiting("read")]` on `LinksController.Get` and `GetStats`
   - **AC**: burst of `BurstLimit` redirects all 302, the next 429; every redirect outcome counts (302, 404, 410); a rejected redirect records no click; budgets independent per group and per client; health never limited
   - **Tests**: tests/UrlShortener.IntegrationTests/RateLimiting/RedirectAndReadRateLimitTests.cs: burst then 429 with `Retry-After`; unknown and expired codes count; no click stored for rejected redirects (FIFO marker click); exhausted create budget does not block redirect/read and vice versa; read budget covers details and stats together; another client unaffected; 200 health requests from one client all 200
   - **Sign-off**: redirect path

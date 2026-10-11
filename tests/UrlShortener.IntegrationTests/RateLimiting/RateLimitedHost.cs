@@ -18,6 +18,13 @@ internal static class RateLimitedHost
             builder.ConfigureTestServices(services => services.AddTransient<IStartupFilter, ClientAddressStartupFilter>());
         });
 
+    public static Task<HttpResponseMessage> GetAsync(this HttpClient client, string clientIp, string path)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, new Uri(path, UriKind.Relative));
+        request.Headers.Add(ClientAddressStartupFilter.Header, clientIp);
+        return client.SendAsync(request);
+    }
+
     public static Task<HttpResponseMessage> CreateLinkAsync(this HttpClient client, string clientIp, object body)
     {
         var request = new HttpRequestMessage(HttpMethod.Post, new Uri("/api/links", UriKind.Relative)) { Content = JsonContent.Create(body) };

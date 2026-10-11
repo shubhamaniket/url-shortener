@@ -50,7 +50,8 @@ internal static partial class RateLimitRejection
         return policy switch
         {
             RateLimitPolicies.Create => TimeSpan.FromSeconds(budgets.Create.WindowSeconds),
-            _ => TimeSpan.FromSeconds(1),
+            RateLimitPolicies.Read => TimeSpan.FromSeconds(budgets.Read.WindowSeconds),
+            _ => TimeSpan.FromSeconds(1), // the token bucket refills every second
         };
     }
 
