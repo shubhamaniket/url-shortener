@@ -43,13 +43,12 @@ public sealed class WebUiHostingTests(ApiFactory factory) : IClassFixture<ApiFac
     {
         using var host = Host();
         var client = host.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
-        var created = await client.PostAsync(
-            new Uri("/api/links", UriKind.Relative),
-            new StringContent("""{"url":"https://example.com/ui"}""", System.Text.Encoding.UTF8, "application/json"));
+        using var body = new StringContent("""{"url":"https://example.com/ui"}""", System.Text.Encoding.UTF8, "application/json");
+        using var created = await client.PostAsync(new Uri("/api/links", UriKind.Relative), body);
         var code = System.Text.Json.JsonDocument.Parse(await created.Content.ReadAsStringAsync()).RootElement.GetProperty("code").GetString();
 
-        var redirect = await client.GetAsync(new Uri($"/{code}", UriKind.Relative));
-        var unknown = await client.GetAsync(new Uri("/zzzzzzz", UriKind.Relative));
+        using var redirect = await client.GetAsync(new Uri($"/{code}", UriKind.Relative));
+        using var unknown = await client.GetAsync(new Uri("/zzzzzzz", UriKind.Relative));
 
         Assert.Equal(HttpStatusCode.Found, redirect.StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, unknown.StatusCode);
@@ -61,10 +60,10 @@ public sealed class WebUiHostingTests(ApiFactory factory) : IClassFixture<ApiFac
 
     private static string CreateWebRoot()
     {
-        var root = Path.Combine(Path.GetTempPath(), $"urlshortener-web-{Guid.NewGuid():N}");
-        Directory.CreateDirectory(Path.Combine(root, "assets"));
-        File.WriteAllText(Path.Combine(root, "index.html"), "<!doctype html><html><body><div id=\"root\"></div></body></html>");
-        File.WriteAllText(Path.Combine(root, "assets", "index-test.js"), "console.log('ui');");
+        var root = Path.Join(Path.GetTempPath(), $"urlshortener-web-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(Path.Join(root, "assets"));
+        File.WriteAllText(Path.Join(root, "index.html"), "<!doctype html><html><body><div id=\"root\"></div></body></html>");
+        File.WriteAllText(Path.Join(root, "assets", "index-test.js"), "console.log('ui');");
         return root;
     }
 }

@@ -21,7 +21,7 @@ builder.Services.AddControllers(options =>
 builder.Services.AddEndpointsApiExplorer();
 // Request examples and operation summaries come from the XML doc comments on contracts and controllers.
 builder.Services.AddSwaggerGen(options => options.IncludeXmlComments(
-    Path.Combine(AppContext.BaseDirectory, $"{typeof(Program).Assembly.GetName().Name}.xml"),
+    Path.Join(AppContext.BaseDirectory, $"{typeof(Program).Assembly.GetName().Name}.xml"),
     includeControllerXmlComments: true));
 builder.Services.AddHealthChecks().AddCheck<DatabaseHealthCheck>("database");
 builder.Services.AddProblemDetails(options => options.CustomizeProblemDetails = context =>

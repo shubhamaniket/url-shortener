@@ -19,7 +19,7 @@ public sealed class ClickStatsReaderTests : IAsyncLifetime
     private static readonly DateTime TodayStart = Today.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
     private static readonly DateTime CreatedAt = TodayStart.AddDays(-100);
 
-    private readonly string _databasePath = Path.Combine(Path.GetTempPath(), $"urlshortener-stats-{Guid.NewGuid():N}.db");
+    private readonly string _databasePath = Path.Join(Path.GetTempPath(), $"urlshortener-stats-{Guid.NewGuid():N}.db");
     private ServiceProvider _services = null!;
 
     public async Task InitializeAsync()

@@ -20,7 +20,7 @@ public sealed class MigrationTests : IAsyncLifetime
 
     private static readonly DateTime CreatedAt = new(2026, 10, 10, 13, 45, 0, DateTimeKind.Utc);
 
-    private readonly string _databasePath = Path.Combine(Path.GetTempPath(), $"urlshortener-migration-{Guid.NewGuid():N}.db");
+    private readonly string _databasePath = Path.Join(Path.GetTempPath(), $"urlshortener-migration-{Guid.NewGuid():N}.db");
     private readonly DbContextOptions<AppDbContext> _options;
 
     public MigrationTests()
