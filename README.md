@@ -140,7 +140,8 @@ dotnet test -c Release
 cd web && npm ci && npm run lint && npm test && npm run build
 ```
 
-Integration tests run the real HTTP pipeline against real SQLite files (one per test host), including
+Details and coverage numbers: [docs/testing.md](docs/testing.md). Integration tests run the real HTTP
+pipeline against real SQLite files (one per test host), including
 concurrency races, migration on a seeded database, the background click writer, and rate limits.
 CI runs all of the above on every pull request, plus a vulnerable-package gate, a Docker image build
 and CodeQL (C# and TypeScript).
@@ -165,9 +166,9 @@ runnable with one command, and keep a clear path to production.
 | CI / quality gates | GitHub Actions, CodeQL, Dependabot | Build, format, tests + coverage, vulnerability gates, image build on every PR | Azure DevOps Pipelines | — |
 | Process | Spec-driven development with GitHub Spec Kit | Spec → clarify → plan → tasks → analyze before code, human approval per task | Ad-hoc prompting | Extra upfront time per feature ([ADR-007](docs/adr/007-spec-driven-development.md)) |
 
-**Production evolution:** PostgreSQL or Azure SQL for links, a message queue and a separate store for
-click analytics, a shared store (e.g. Redis) for rate-limit budgets and a redirect cache, multiple API
-instances behind a load balancer with trusted-proxy configuration.
+**Production evolution (AWS):** the same container on ECS Fargate behind an Application Load Balancer,
+PostgreSQL on Amazon RDS, SQS for click analytics, ElastiCache for shared rate-limit budgets and a
+redirect cache, with trusted-proxy configuration; see [docs/architecture.md](docs/architecture.md#scaling-path).
 
 ## Project structure
 
@@ -201,6 +202,8 @@ requests.http                   Sample requests
 
 | Document | Contents |
 |---|---|
+| [docs/architecture.md](docs/architecture.md) | Components, layers, request pipeline, sequence diagrams, data model, AI-assisted workflow, scaling path |
+| [docs/testing.md](docs/testing.md) | Test pyramid, real coverage numbers, techniques, what is not tested |
 | [docs/adr/](docs/adr/README.md) | 10 architecture decision records |
 | [docs/scenarios/01-greenfield.md](docs/scenarios/01-greenfield.md) | Greenfield: building the core service from a requirement |
 | [docs/scenarios/02-brownfield.md](docs/scenarios/02-brownfield.md) | Brownfield: impact analysis, expiry, analytics, off-path recording, migration and rollback |
@@ -214,12 +217,12 @@ requests.http                   Sample requests
 | Requirement | Evidence in this repository |
 |---|---|
 | Working prototype, runnable end-to-end | [docker-compose.yml](docker-compose.yml), [Quick start](#quick-start), [requests.http](requests.http) |
-| Architecture overview | [docs/adr/](docs/adr/README.md) (ADR-001, 004, 005, 009, 010) |
+| Architecture overview | [docs/architecture.md](docs/architecture.md), [docs/adr/](docs/adr/README.md) |
 | Greenfield scenario | [docs/scenarios/01-greenfield.md](docs/scenarios/01-greenfield.md), [specs/001-greenfield-core/](specs/001-greenfield-core/) |
 | Brownfield scenario | [docs/scenarios/02-brownfield.md](docs/scenarios/02-brownfield.md), [specs/002-brownfield-analytics-expiry/](specs/002-brownfield-analytics-expiry/), merged PRs #12–#17 |
 | Ambiguous scenario | [docs/scenarios/03-ambiguous.md](docs/scenarios/03-ambiguous.md), [specs/003-reliability-abuse-protection/](specs/003-reliability-abuse-protection/), merged PRs #18–#19 |
 | Setup instructions | This README ([Quick start](#quick-start), [Configuration](#configuration)) |
-| Testing approach | [Running the tests](#running-the-tests), [CI workflow](.github/workflows/ci.yml) (coverage report uploaded as an artifact) |
+| Testing approach | [docs/testing.md](docs/testing.md) (98% line coverage of hand-written code), [CI workflow](.github/workflows/ci.yml) (coverage report uploaded as an artifact) |
 | Limitations and trade-offs | [Known limitations](#known-limitations), consequences sections of each [ADR](docs/adr/README.md), risks sections of the scenario docs |
 | 1) Requirement understanding | `spec.md` files with their Clarifications sections, e.g. [002](specs/002-brownfield-analytics-expiry/spec.md), [003 interpretation](docs/scenarios/03-ambiguous.md#2-interpretation) |
 | 2) Task decomposition | `tasks.md` files with dependencies and order, e.g. [002](specs/002-brownfield-analytics-expiry/tasks.md) |
