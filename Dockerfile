@@ -2,7 +2,7 @@
 # One image: the web UI is built first and served by the API from wwwroot (ADR-010).
 
 # 1. Web UI → src/UrlShortener.Api/wwwroot
-FROM node:22-alpine AS web
+FROM node:25-alpine AS web
 WORKDIR /src/web
 COPY web/package.json web/package-lock.json ./
 RUN npm ci
