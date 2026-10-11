@@ -1,3 +1,7 @@
+# Dependency updates. The platforms are deliberate choices (.NET 8 LTS with EF Core 8, Node 22 LTS,
+# React 18): major versions of NuGet, npm and Docker images are ignored and done as planned upgrades
+# that move SDK, runtime, EF Core and tooling together. Minor and patch updates still arrive weekly;
+# GitHub Actions majors are allowed (they proved safe in CI). Triage record: PRs #21–#36.
 version: 2
 updates:
   - package-ecosystem: nuget
@@ -8,6 +12,9 @@ updates:
     groups:
       microsoft:
         patterns: ["Microsoft.*", "System.*"]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: "/"
@@ -20,9 +27,15 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: docker
     directory: "/"
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
