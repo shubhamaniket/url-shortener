@@ -5,7 +5,7 @@ It supports the "AI-assisted execution and traceability" requirement.
 
 ## Summary
 - **Tools used:** Claude (claude.ai chat) for planning, design review, and setup guidance; Claude Code via GitHub Spec Kit (`--integration claude`) for spec-driven implementation
-- **Entries so far:** 80 | Accepted: 38 | Edited: 41 | Rejected: 1
+- **Entries so far:** 81 | Accepted: 39 | Edited: 41 | Rejected: 1
 - **Key lessons so far:**
   - AI knowledge of fast-moving CLI tools can be out of date. Verify flags against the tool's `--help` (Spec Kit `--ai` → `--integration`).
   - AI-generated shell commands may not account for the local shell (zsh globbing). Run, read the error, fix.
@@ -101,3 +101,4 @@ It supports the "AI-assisted execution and traceability" requirement.
 | 78 | 2026-10-11 12:25 | P4-plan | design | Run `/speckit.plan`: built-in rate limiter, attribute policies, rejection handler, validated options | plan (Principle IV resolved), research R1–R8, data model (in memory, no migration), contract v0.3.0 (429 + Retry-After on 4 operations), quickstart | Edited | Checked the .NET 8 reference packs before deciding: limiter ships with the shared framework (no package) but has no `TimeProvider`, so tests use short real windows; a test-only startup filter simulates client addresses. Contract validated structurally (same 8 style warnings as v0.2.0) | n/a (in the spec commit) |
 | 79 | 2026-10-11 12:25 | P4-tasks | design | Run `/speckit.tasks` with coarse tasks (engineer decision) | 6 tasks: baseline, create budget end to end (MVP), redirect and read budgets (sign-off), operations and contract, ADR-009 and requests.http, validation and close-out | Edited | Self-review fixed a test placed in a project that cannot reference the Api | n/a (in the spec commit) |
 | 80 | 2026-10-11 12:25 | P4-analyze | review | Run `/speckit.analyze` across spec, plan, tasks, constitution | 4 findings (0 critical): test project placement, missing Retry-After fallback, status-code-pages interplay, inherited test budgets; 15/15 requirements and 7/7 success criteria covered | Accepted | Two fixed in tasks.md, two already covered by planned tests | n/a (in the spec commit) |
+| 81 | 2026-10-11 12:26 | T001 (003) | test | Record the regression baseline before any rate-limiting code | Full suite on the branch: 244 unit + 114 integration passing, 0 warnings; written into scenario doc §6 | Accepted | Same counts as `main` after feature 002 | `<hash>` |

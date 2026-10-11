@@ -98,3 +98,12 @@ limited"), and it closes the deviation carried since feature 001.
 | Authentication and accounts | A product change, not hardening; out of scope for the whole prototype |
 | Malware scanning through an external API | New external dependency and privacy review |
 | Distributed cache or multi-instance rate limiting | Single instance (assumption above); would need a shared store such as Redis |
+
+## 6. Validation
+
+### Regression baseline (T001)
+
+Recorded on branch `003-reliability-abuse-protection` at `b40ba61` (planning only, no code change
+since `main` at `076e9be`), 2026-10-11 12:26 IST: build 0 warnings / 0 errors; **244 unit + 114
+integration tests passing, 0 failing**, identical to `main` after feature 002. Every later task runs
+the full suite; an existing test may change only where tasks.md lists it under "Changed tests".

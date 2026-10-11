@@ -40,7 +40,7 @@ unchanged.
 
 ## Phase 1: Setup
 
-- [ ] T001 Record the regression baseline on this branch before any code change (full suite, build warnings) in docs/scenarios/03-ambiguous.md §6
+- [x] T001 Record the regression baseline on this branch before any code change (full suite, build warnings) in docs/scenarios/03-ambiguous.md §6
   - **AC**: counts equal `main` after feature 002 (244 unit + 114 integration, 0 warnings)
 
 ---
