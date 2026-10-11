@@ -87,8 +87,9 @@ unchanged.
 
 ## Phase 5: Polish & Cross-Cutting Concerns
 
-- [ ] T005 [P] docs/adr/009-rate-limiting.md (algorithms, client identity and forwarded headers, logging risk, IPv6 /64 and NAT limitations, what was left out and why) and requests.http Part 3 (create budget → 429, health exempt)
+- [x] T005 [P] docs/adr/009-rate-limiting.md (algorithms, client identity and forwarded headers, logging risk, IPv6 /64 and NAT limitations, what was left out and why) and requests.http Part 3 (create budget → 429, health exempt)
   - **AC**: every new request executed against the running app with the expected status
+  - **Outcome**: the existing file would have broken under the default create budget (Part 1 sends 9 creates, so Part 2's F2-2 became the 11th and got 429, not 400); the header now states the budgets and each part starts with "wait one minute". Whole file (34 requests) run top to bottom against the app with **default** budgets on a fresh database: 34/34 as expected (10 × 201 then 429, separate budgets, 100 health checks); 16 links stored = successful creates only; console log shows the 2 rejections by policy and no client address
 - [ ] T006 Validate and close out: run specs/003-reliability-abuse-protection/quickstart.md scenarios 1–9 and the latency check on the running app; engineer verifies in Swagger/Postman; complete docs/scenarios/03-ambiguous.md §3–8 (impact, decomposition, execution, validation vs baseline, risks, next steps); tick tasks; PR description with the redirect-path sign-off
   - **AC**: all scenarios as expected; p95 redirect under 100 ms within budget; real numbers recorded
 

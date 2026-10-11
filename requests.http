@@ -1,11 +1,17 @@
 # URL Shortener — sample requests
 #   Part 1: feature 001 quickstart scenarios 1–12 (specs/001-greenfield-core/quickstart.md)
 #   Part 2: feature 002 — expiry, 410 Gone, reclaim, statistics (specs/002-brownfield-analytics-expiry/quickstart.md)
+#   Part 3: feature 003 — rate limiting (specs/003-reliability-abuse-protection/quickstart.md)
 #
 # Run with the VS Code "REST Client" extension (humao.rest-client): click "Send Request" above
 # each request, top to bottom. Later requests reuse the code returned by earlier ones.
 # Start the API first:  dotnet run --project src/UrlShortener.Api --launch-profile http
-# Contract (current, v0.2.0): specs/002-brownfield-analytics-expiry/contracts/openapi.yaml
+# Contract (current, v0.3.0): specs/003-reliability-abuse-protection/contracts/openapi.yaml
+#
+# Rate limits (feature 003, per client, defaults): create 10 per minute; redirect 120 per minute
+# with bursts up to 60; details + statistics 60 per minute; /health unlimited. Every request counts,
+# including 400s and 404s. Beyond a budget you get 429 with Retry-After, so wait one minute between
+# parts as noted below.
 
 @baseUrl = http://localhost:5058
 
@@ -118,7 +124,7 @@ Content-Type: application/json
 # Click counts and statistics are filled in by a background writer: allow a second after redirects.
 # ═══════════════════════════════════════════════════════════════════════════════════════════════
 
-### F2-1. Expiry with an offset → 201, expiresAtUtc is the same instant in UTC (2099-12-31T18:29:00Z)
+### F2-1. (Wait one minute after Part 1: the create budget is 10 per minute.) Expiry with an offset → 201, expiresAtUtc is the same instant in UTC (2099-12-31T18:29:00Z)
 POST {{baseUrl}}/api/links
 Content-Type: application/json
 
@@ -201,3 +207,32 @@ GET {{baseUrl}}/api/links/{{stats.response.body.$.code}}/stats
 
 ### F2-8. Statistics for an unknown code → 404 ProblemDetails
 GET {{baseUrl}}/api/links/zzzzzzz/stats
+
+# ═══════════════════════════════════════════════════════════════════════════════════════════════
+# Part 3 — feature 003: rate limiting
+# ═══════════════════════════════════════════════════════════════════════════════════════════════
+
+### F3-1. (Wait one minute after Part 2.) Create 11 times within a minute (send 11 times) → 429 on the 11th; the first 10 get 201
+POST {{baseUrl}}/api/links
+Content-Type: application/json
+
+{
+  "url": "https://example.com/rate-limit-demo"
+}
+
+### F3-2. One more create → 429 Too many requests, Retry-After (seconds), ProblemDetails; nothing created
+POST {{baseUrl}}/api/links
+Content-Type: application/json
+
+{
+  "url": "https://example.com/rate-limit-demo"
+}
+
+### F3-3. Other budgets are separate: following a link still works → 302
+GET {{baseUrl}}/{{stats.response.body.$.code}}
+
+### F3-4. Reading details still works → 200
+GET {{baseUrl}}/api/links/{{stats.response.body.$.code}}
+
+### F3-5. Health is never limited (send 100 times) → 200
+GET {{baseUrl}}/health
