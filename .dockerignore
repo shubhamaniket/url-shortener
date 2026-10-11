@@ -1,0 +1,17 @@
+**/bin/
+**/obj/
+**/node_modules/
+**/TestResults/
+src/UrlShortener.Api/wwwroot/
+**/*.db
+**/*.db-shm
+**/*.db-wal
+.git/
+.github/
+.vs/
+.vscode/
+.idea/
+docs/
+specs/
+tests/
+url-shortner-plan.md

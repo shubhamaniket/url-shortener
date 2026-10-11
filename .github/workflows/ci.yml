@@ -91,3 +91,12 @@ jobs:
 
       - name: Audit (fail on any finding)
         run: npm audit --audit-level=low
+
+  docker:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build image (no push)
+        run: docker build -t url-shortener:ci .

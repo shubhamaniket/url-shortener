@@ -1,0 +1,27 @@
+# docker compose up --build  →  http://localhost:8080 (web UI at /, API under /api)
+# Data persists in the "shortener-data" volume; `docker compose down -v` resets it.
+services:
+  api:
+    build: .
+    image: url-shortener:local
+    ports:
+      - "8080:8080"
+    volumes:
+      - shortener-data:/data
+    environment:
+      ShortLinks__PublicBaseUrl: http://localhost:8080
+
+  # One-shot demo data through the public API, so statistics are not empty on first look.
+  seed:
+    image: curlimages/curl:8.11.1
+    depends_on:
+      - api
+    volumes:
+      - ./docker/seed.sh:/seed.sh:ro
+    entrypoint: ["/bin/sh", "/seed.sh"]
+    environment:
+      API_URL: http://api:8080
+    restart: "no"
+
+volumes:
+  shortener-data:
