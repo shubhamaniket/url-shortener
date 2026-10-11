@@ -85,7 +85,7 @@ fixed, including one that would have made the "no stack trace" security test mea
 | #8 | T016–T018 | Alias rules, alias create path (409), alias race test |
 | #9 | T019 | `GET /api/links/{code}` |
 | #10 | T020 | Database health check |
-| (pending) | T021–T025 | OpenAPI drift test, `requests.http`, quickstart validation, this document |
+| #11 | T021–T025 | OpenAPI drift test, `requests.http`, quickstart validation, this document |
 
 **Notable engineering decisions** (all approved by the engineer before commit):
 

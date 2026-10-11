@@ -139,7 +139,7 @@ flowchart LR
 | PR | Tasks | Content |
 |---|---|---|
 | #18 | Planning, T001–T004 | Interpretation, spec, plan, tasks; baseline; create budget; redirect and read budgets; 429 in the contract, startup validation, log checks |
-| (this PR) | T005–T006 | ADR-009, `requests.http` Part 3, validation, this document |
+| #19 | T005–T006 | ADR-009, `requests.http` Part 3, validation, this document |
 
 **Sign-offs** (engineer, before commit): security control (T002 `29ee71b`), redirect path (T003
 `277f58e`).
