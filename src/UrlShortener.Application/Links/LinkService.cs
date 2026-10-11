@@ -62,10 +62,19 @@ public sealed partial class LinkService(
     {
         var link = ShortLink.CreateWithCustomAlias(alias.Value, destination.Value, createdAtUtc, expiresAtUtc);
 
-        // One attempt: the unique index rejects an alias taken in any letter case (FR-012).
+        // One attempt: the unique index rejects an alias taken in any letter case (FR-012), unless the
+        // link holding it has expired, in which case the code is reclaimed (FR-006a, research R6).
         if (!await repository.TryAddAsync(link, cancellationToken))
         {
-            throw new AliasAlreadyExistsException(alias.Value);
+            var current = await repository.FindByNormalizedCodeAsync(link.NormalizedCode, cancellationToken);
+            if (current is null
+                || !current.IsExpiredAt(createdAtUtc)
+                || !await repository.TryReplaceExpiredAsync(current, link, createdAtUtc, cancellationToken))
+            {
+                throw new AliasAlreadyExistsException(alias.Value);
+            }
+
+            LogCodeReclaimed(logger, link.Code);
         }
 
         LogLinkCreated(logger, link.Code);
@@ -136,6 +145,9 @@ public sealed partial class LinkService(
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Recording a click for {Code} failed; redirect continues")]
     private static partial void LogClickRecordingFailed(ILogger logger, Exception exception, string code);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Reclaimed expired code {Code}; the expired link and its click history were deleted")]
+    private static partial void LogCodeReclaimed(ILogger logger, string code);
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Generated short code collided on attempt {Attempt}")]
     private static partial void LogCodeCollision(ILogger logger, int attempt);
