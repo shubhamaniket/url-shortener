@@ -10,7 +10,7 @@ namespace UrlShortener.Api.Controllers;
 [Route("api/links")]
 public sealed class LinksController(ILinkService linkService) : ControllerBase
 {
-    /// <summary>Create a short link with a generated code or the requested custom alias.</summary>
+    /// <summary>Create a short link with a generated code or the requested custom alias, optionally expiring.</summary>
     [HttpPost]
     [ProducesResponseType<LinkResponse>(StatusCodes.Status201Created, "application/json")]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest, "application/problem+json")]
@@ -21,12 +21,12 @@ public sealed class LinksController(ILinkService linkService) : ControllerBase
         ArgumentNullException.ThrowIfNull(request);
 
         var details = await linkService.CreateAsync(
-            new CreateLinkCommand(request.Url!, request.CustomAlias), cancellationToken);
+            new CreateLinkCommand(request.Url!, request.CustomAlias, request.ExpiresAt), cancellationToken);
 
         return Created(new Uri($"/api/links/{details.Code}", UriKind.Relative), LinkResponse.From(details));
     }
 
-    /// <summary>Get a link's details and total click count. Public: knowing the code is enough.</summary>
+    /// <summary>Get a link's details and total click count, also after it has expired. Public: knowing the code is enough.</summary>
     [HttpGet("{code}")]
     [ProducesResponseType<LinkResponse>(StatusCodes.Status200OK, "application/json")]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, "application/problem+json")]

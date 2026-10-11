@@ -8,11 +8,12 @@ public sealed record LinkResponse(
     string ShortUrl,
     string OriginalUrl,
     DateTime CreatedAtUtc,
+    DateTime? ExpiresAtUtc,
     long ClickCount)
 {
     public static LinkResponse From(LinkDetails details)
     {
         ArgumentNullException.ThrowIfNull(details);
-        return new(details.Code, details.ShortUrl, details.OriginalUrl, details.CreatedAtUtc, details.ClickCount);
+        return new(details.Code, details.ShortUrl, details.OriginalUrl, details.CreatedAtUtc, details.ExpiresAtUtc, details.ClickCount);
     }
 }

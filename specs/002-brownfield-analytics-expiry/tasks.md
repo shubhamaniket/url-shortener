@@ -81,7 +81,7 @@ listed under "Changed tests" in that task, with the reason (research R10, spec S
   - **AC**: expired check uses `TimeProvider`; details ignore expiry (FR-005)
   - **Tests**: tests/UrlShortener.UnitTests/Application/ExpiryTests.cs: create with/without expiry; invalid expiry stores nothing; before expiry → Found + 1 click; at/after → Expired + 0 clicks; details of an expired link returned with `ExpiresAtUtc`
   - **Changed tests**: ResolveLinkTests (9) assert on `RedirectResolution` instead of `string?` (signature change, same behaviour); fakes/command constructors gain the optional expiry argument
-- [ ] T008 [US1] Api expiry: `expiresAt` on CreateLinkRequest, `expiresAtUtc` on LinkResponse, `RedirectController` maps `Expired` → 410 ProblemDetails "Link expired" with `Cache-Control: no-store`; ApiFactory gains a controllable clock for tests
+- [x] T008 [US1] Api expiry: `expiresAt` on CreateLinkRequest, `expiresAtUtc` on LinkResponse, `RedirectController` maps `Expired` → 410 ProblemDetails "Link expired" with `Cache-Control: no-store`; ApiFactory gains a controllable clock for tests
   - **AC**: matches contracts/openapi.yaml v0.2.0; OpenAPI drift test switched to the feature 002 contract
   - **Tests**: tests/UrlShortener.IntegrationTests/ExpiryTests.cs: create with offset → `expiresAtUtc` UTC with `Z`; 400 `errors.expiresAt` for no zone and past; 302 before expiry; advance clock → 410 problem+json, no-store, stored count unchanged; details of expired link 200 with `expiresAtUtc`; links without expiry unaffected
   - **Changed tests**: LinkDetailsTests "exactly five fields" → six (`expiresAtUtc`); OpenApiContractTests expected `LinkResponse`/`CreateLinkRequest` fields
@@ -145,6 +145,9 @@ listed under "Changed tests" in that task, with the reason (research R10, spec S
 - [ ] T018 Run specs/002-brownfield-analytics-expiry/quickstart.md: scenarios 1–10 on a database migrated from feature 001 data, privacy inspection of `ClickEvents`, latency loop (SC-002); engineer verifies Swagger and Postman (v0.2.0 contract) by hand
   - **AC**: all scenarios as expected; real numbers recorded for the scenario doc
 - [ ] T019 Complete docs/scenarios/02-brownfield.md sections 2 and 4–8: interpretation (clarifications, incl. the engineer's override on Q2), decomposition, execution, validation (regression baseline vs final counts, changed tests with reasons), before/after behaviour, migration steps and rollback, risks, next steps
+- [ ] T021 [P] Show the request examples in Swagger: generate the Api XML documentation file and call `IncludeXmlComments`, so "Try it out" pre-fills `https://example.com/...`, `team-offsite` and a zoned `expiresAt` instead of `string` (found during T008 manual testing: the `<example>` tags written in feature 001 were never wired up, so a tester sent the placeholder `"customAlias": "string"`). Added during implementation; done before T018 so the manual Swagger check covers it
+  - **AC**: Swagger UI and `/swagger/v1/swagger.json` show the examples from the doc comments; warnings-as-errors still pass (missing XML comments on public types must not become build errors)
+  - **Tests**: OpenApiContractTests: generated `CreateLinkRequest` schema carries the `customAlias` and `expiresAt` examples
 - [ ] T020 Close out: tick tasks, PR description per the template with sign-offs (migration T005, redirect T008/T012, validation T006, data deletion T009)
 
 **Genuine bug rule** (plan §7): if a real defect in feature 001 code is found during this work, add a task here and fix it test-first (failing test → fix → passing test) with the root cause documented. None is to be invented.
@@ -157,7 +160,7 @@ listed under "Changed tests" in that task, with the reason (research R10, spec S
 - **US1**: T006 ∥ (after T005) → T007 → T008 → T009
 - **US2**: T010 ∥ T011 after T005 (T011 needs T004/T005) → T012 (needs T007's `RedirectResolution`, T010, T011) → T013
 - **US3**: T014 after T012 (events exist) → T015
-- **Polish**: T016 ∥ T017 any time after their inputs; T018 → T019 → T020
+- **Polish**: T016 ∥ T017 ∥ T021 any time after their inputs; T021 before T018; T018 → T019 → T020
 
 ### Parallel Opportunities
 

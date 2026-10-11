@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace UrlShortener.IntegrationTests;
 
@@ -10,6 +12,7 @@ namespace UrlShortener.IntegrationTests;
 /// <c>Testing</c> environment (not the factory default <c>Development</c>) so production-like
 /// behaviour, such as error responses without stack traces, is what gets tested.
 /// Tests replace services with <c>WithWebHostBuilder(b =&gt; b.ConfigureTestServices(...))</c>.
+/// <see cref="Clock"/> follows real time until a test moves it forward (expiry tests).
 /// </summary>
 public sealed class ApiFactory : WebApplicationFactory<Program>
 {
@@ -17,6 +20,8 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
 
     private readonly string _databasePath =
         Path.Combine(Path.GetTempPath(), $"urlshortener-test-{Guid.NewGuid():N}.db");
+
+    public AdjustableTimeProvider Clock { get; } = new();
 
     public string DatabasePath => _databasePath;
 
@@ -32,6 +37,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
                 ["Database:MigrateOnStartup"] = "true",
                 ["ShortLinks:PublicBaseUrl"] = PublicBaseUrl,
             }));
+        builder.ConfigureTestServices(services => services.AddSingleton<TimeProvider>(Clock));
     }
 
     public override async ValueTask DisposeAsync()
