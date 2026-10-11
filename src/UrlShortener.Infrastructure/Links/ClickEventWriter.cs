@@ -23,6 +23,9 @@ public sealed partial class ClickEventWriter(
 
     private readonly TimeSpan _shutdownFlushTimeout = options.Value.ShutdownFlushTimeout;
 
+    // Clicks of batches cut off by the shutdown budget; reported once, with what is still queued.
+    private int _abandonedAtShutdown;
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         // Writes are not cancelled by the stop request itself, so a batch in progress and the queued
@@ -43,6 +46,12 @@ public sealed partial class ClickEventWriter(
         }
 
         await WriteQueuedAsync(writeBudget.Token);
+
+        var notStored = _abandonedAtShutdown + recorder.Reader.Count;
+        if (notStored > 0)
+        {
+            LogNotStoredAtShutdown(logger, notStored);
+        }
     }
 
     private async Task WriteQueuedAsync(CancellationToken cancellationToken)
@@ -63,11 +72,6 @@ public sealed partial class ClickEventWriter(
 
             await WriteBatchAsync(batch, cancellationToken);
         }
-
-        if (recorder.Reader.Count > 0)
-        {
-            LogNotStoredAtShutdown(logger, recorder.Reader.Count);
-        }
     }
 
     private async Task WriteBatchAsync(List<ClickEvent> batch, CancellationToken cancellationToken)
@@ -83,7 +87,7 @@ public sealed partial class ClickEventWriter(
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            LogNotStoredAtShutdown(logger, batch.Count);
+            _abandonedAtShutdown += batch.Count;
         }
         catch (Exception ex)
         {

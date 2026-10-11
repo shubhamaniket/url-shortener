@@ -192,14 +192,18 @@ public sealed class ClickEventWriterTests : IAsyncLifetime
             services.AddScoped<IClickEventStore>(provider => provider.GetRequiredService<HangingStore>());
         });
         var writer = await StartWriterAsync();
-        Record(Click(1), Click(1));
         var store = _services.GetRequiredService<HangingStore>();
+
+        // One click stuck in storage and one still queued: both are lost, and reported once, together.
+        Record(Click(1));
         await Eventually.AssertAsync(() => Task.FromResult(store.Started), "a batch in progress");
+        Record(Click(1));
 
         var stopping = writer.StopAsync(CancellationToken.None);
 
         Assert.Same(stopping, await Task.WhenAny(stopping, Task.Delay(TimeSpan.FromSeconds(5))));
-        Assert.Contains(Logs, entry => entry.Message == "2 clicks were not stored before shutdown");
+        var lost = Assert.Single(Logs, entry => entry.Message.EndsWith("not stored before shutdown", StringComparison.Ordinal));
+        Assert.Equal("2 clicks were not stored before shutdown", lost.Message);
     }
 
     private async Task BuildAsync(Action<IServiceCollection>? configure = null)
