@@ -155,7 +155,8 @@ flowchart LR
 - **Rejections before controllers**: `UseRateLimiter()` runs before any controller, so a rejected
   create stores nothing and a rejected redirect queues no click.
 
-**AI involvement:** 12 logged interactions (#75–#86): 6 accepted as generated, 6 edited, 0 rejected.
+**AI involvement:** 12 logged interactions (#75–#86): 5 accepted as generated, 7 edited, 0 rejected
+(corrected in Phase 6; the close-out first said 6 and 6).
 
 | What the AI got wrong or missed | How it was caught | Fix |
 |---|---|---|

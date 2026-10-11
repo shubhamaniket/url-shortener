@@ -205,6 +205,7 @@ Full list with failure scenarios and trade-offs: [docs/risks-and-tradeoffs.md](d
 
 | Document | Contents |
 |---|---|
+| [docs/engineering-summary.md](docs/engineering-summary.md) | **Start here**: problem and approach, artifacts, AI usage (where it helped, where it was wrong), validation, assumptions, next steps |
 | [docs/architecture.md](docs/architecture.md) | Components, layers, request pipeline, sequence diagrams, data model, AI-assisted workflow, scaling path |
 | [docs/testing.md](docs/testing.md) | Test pyramid, real coverage numbers, techniques, what is not tested |
 | [docs/risks-and-tradeoffs.md](docs/risks-and-tradeoffs.md) | Risk register with mitigations and validation, failure scenarios, trade-offs, limitations, assumptions |
@@ -236,7 +237,7 @@ Full list with failure scenarios and trade-offs: [docs/risks-and-tradeoffs.md](d
 | 5) Engineering output | [src/](src/), [tests/](tests/), [web/](web/), OpenAPI contract + Swagger, [migrations](src/UrlShortener.Infrastructure/Persistence/Migrations/) |
 | 6) Validation and risk control | [docs/risks-and-tradeoffs.md](docs/risks-and-tradeoffs.md), [docs/testing.md](docs/testing.md), CI quality gates, validation sections in the scenario docs |
 | 7) Controlled oversight | [PR template](.github/pull_request_template.md) with sign-off checklist, PR history, `High-impact:` commit lines |
-| 8) Final engineering summary | Engineering summary (Phase 6, in progress) |
+| 8) Final engineering summary | [docs/engineering-summary.md](docs/engineering-summary.md) |
 
 ## License
 
