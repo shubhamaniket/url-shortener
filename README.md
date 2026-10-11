@@ -10,6 +10,12 @@ or custom aliases, optional expiry), follow them (302, or 410 once expired), and
 statistics: total clicks, clicks per day for 30 days, and top referrers. Clicks are recorded off the
 redirect path, every public endpoint is rate limited per client, and no IP address is ever stored.
 
+**Demo video (about 2 minutes, silent, captioned):** [url-shortener-demo.webm](url-shortener-demo.webm).
+It walks through the spec-driven process in this README, then the running app: shortening with an
+alias and an expiry, the redirect, validation errors, statistics, an expired link (410) and rate
+limiting (429), and ends with a merged pull request and the AI usage log. It is an automated
+walkthrough: Playwright drove the real app (`docker compose up`) and recorded the screen.
+
 **Contents:** [Features](#features) · [How this was built](#how-this-was-built-spec-driven-development-with-an-ai-agent) · [Quick start](#quick-start) · [Using the API](#using-the-api) ·
 [Configuration](#configuration) · [Running the tests](#running-the-tests) ·
 [Why this tech stack](#why-this-tech-stack) · [Project structure](#project-structure) ·
