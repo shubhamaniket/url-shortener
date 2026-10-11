@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using UrlShortener.Api.Configuration;
 using UrlShortener.Api.ErrorHandling;
 using UrlShortener.Api.Health;
+using UrlShortener.Api.RateLimiting;
 using UrlShortener.Application;
 using UrlShortener.Application.Options;
 using UrlShortener.Infrastructure;
@@ -33,6 +34,7 @@ builder.Services.AddOptions<ShortLinkOptions>()
 builder.Services.AddSingleton<IValidateOptions<ShortLinkOptions>, ShortLinkOptionsValidator>();
 builder.Services.AddOptions<ClickRecordingOptions>()
     .Bind(builder.Configuration.GetSection(ClickRecordingOptions.SectionName));
+builder.Services.AddUrlShortenerRateLimiting(builder.Configuration);
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure();
@@ -41,6 +43,9 @@ var app = builder.Build();
 
 app.UseExceptionHandler();
 app.UseStatusCodePages();
+
+// Per-client budgets (feature 003). Runs before any controller, so a rejected request has no effect.
+app.UseRateLimiter();
 
 if (app.Environment.IsDevelopment() || app.Configuration.GetValue<bool>("Database:MigrateOnStartup"))
 {

@@ -36,6 +36,13 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
                 ["ConnectionStrings:Default"] = ConnectionString,
                 ["Database:MigrateOnStartup"] = "true",
                 ["ShortLinks:PublicBaseUrl"] = PublicBaseUrl,
+
+                // Functional tests send many requests quickly from one (unknown) client address; budgets
+                // this large keep rate limiting out of their way. Rate-limiting tests set small ones.
+                ["RateLimiting:Create:PermitLimit"] = "1000000",
+                ["RateLimiting:Redirect:BurstLimit"] = "1000000",
+                ["RateLimiting:Redirect:TokensPerSecond"] = "1000000",
+                ["RateLimiting:Read:PermitLimit"] = "1000000",
             }));
         builder.ConfigureTestServices(services => services.AddSingleton<TimeProvider>(Clock));
     }

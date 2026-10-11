@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 using UrlShortener.Api.Contracts;
+using UrlShortener.Api.RateLimiting;
 using UrlShortener.Application.Links;
 
 namespace UrlShortener.Api.Controllers;
@@ -12,6 +14,7 @@ public sealed class LinksController(ILinkService linkService) : ControllerBase
 {
     /// <summary>Create a short link with a generated code or the requested custom alias, optionally expiring.</summary>
     [HttpPost]
+    [EnableRateLimiting(RateLimitPolicies.Create)]
     [ProducesResponseType<LinkResponse>(StatusCodes.Status201Created, "application/json")]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict, "application/problem+json")]
