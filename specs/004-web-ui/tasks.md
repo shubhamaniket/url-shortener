@@ -31,10 +31,11 @@ unchanged except the one new hosting test (T004).
 - [x] T003 [US2][US3] Lookup and statistics: details (original URL, created, expiry or "never", expired badge, total clicks) and stats (30 days with proportional bars, up to 5 referrers, "No referrers yet"); unknown code, 429 and unreachable messages; live region
   - **Tests**: `LinkLookup.test.tsx`: details + stats rendered from stubbed responses; pasted short URL resolved; expired badge; 404 message; 429 with seconds; axe-core finds no violations on the whole page (SC-003)
   - **Outcome**: axe-core runs on the whole page after a real create → "View details" flow with no violations; its colour-contrast rule cannot run in jsdom (no rendering), so contrast was computed from the palette instead: every text/background pair meets WCAG AA (lowest 4.63:1, button text). Daily clicks are a real table (row headers, hidden caption) with decorative bars hidden from assistive technology
-- [ ] T004 Serve the built UI from the API (R1): `UseDefaultFiles` + `UseStaticFiles` in Program.cs; quickstart check in the browser (dev proxy and served build) and engineer's manual check
+- [x] T004 Serve the built UI from the API (R1): `UseDefaultFiles` + `UseStaticFiles` in Program.cs; quickstart check in the browser (dev proxy and served build) and engineer's manual check
   - **AC**: `/` serves the page when built; redirects, API, health unchanged; built assets under 200 KB compressed (SC-004), measured from the build output
   - **Tests**: integration test: with an `index.html` in the web root, `GET /` returns it; `GET /assets` is not treated as a short code
   - **Changed tests**: none
+  - **Outcome**: 3 hosting tests (page at `/`, files under `/assets`, redirects and 404 ProblemDetails unchanged); a catch-all fallback mutation breaks existing redirect 404 tests, confirming R1. Served build on the running API: `/` 200 text/html, assets 200, health and Swagger unaffected; html + JS + CSS **47.9 KB gzipped** (≈151 KB uncompressed; the API sends files uncompressed, still under the 200 KB budget). Engineer verified the UI by hand, served by the API and through the Vite dev proxy
 
 ## Dependencies
 
