@@ -21,10 +21,11 @@ unchanged except the one new hosting test (T004).
 
 ---
 
-- [ ] T001 Scaffold `web/` (Vite + React + TypeScript strict, ESLint, Vitest), dev proxy to the API (R2), shared modules `api.ts` (typed calls, error mapping R4), `time.ts` (R3), `lookup.ts` (R6); CI job: `npm ci`, lint, test, build; CodeQL adds `javascript-typescript`; Dependabot adds npm
+- [x] T001 Scaffold `web/` (Vite + React + TypeScript strict, ESLint, Vitest), dev proxy to the API (R2), shared modules `api.ts` (typed calls, error mapping R4), `time.ts` (R3), `lookup.ts` (R6); CI job: `npm ci`, lint, test, build; CodeQL adds `javascript-typescript`; Dependabot adds npm
   - **AC**: dependency list exactly as plan.md; build output goes to `src/UrlShortener.Api/wwwroot` (git-ignored)
   - **Tests**: `api.test.ts` (400 field errors, 409, 404, 410, 429 with Retry-After seconds, network failure, success parsing), `time.test.ts` (local value + offsets like +05:30, -08:00, Z), `lookup.test.ts` (code, spaces, full short URL, trailing slash)
   - **Sign-off**: new dependencies
+  - **Change during implementation**: the signed-off versions (Vite 5.4, Vitest 2, ESLint 9, TypeScript 5) installed with **dev-toolchain advisories** (esbuild under Vite 5, `@vitest/mocker`, `@eslint/plugin-kit`, `braces`; runtime React had none). Same packages at current majors audit clean: Vite 8.3.4, @vitejs/plugin-react 6.1.2, Vitest 5.0.3, ESLint 10.12 / @eslint/js 10.0.1, typescript-eslint 8.71.1, TypeScript 6.0.3 (newest typescript-eslint supports), eslint-plugin-react-hooks 7.1.1, jsdom 30.1.2, axe-core 4.14; React 18.3.1 unchanged. `npm audit`: 0 vulnerabilities. Node requirement ^20.19 or ≥22.12 (CI uses 22)
 - [ ] T002 [US1] Create form: URL (required), alias, expiry (datetime-local); disabled while sending; field errors next to fields with focus on the first; result with short URL link, copy button ("Copied"; manual-copy fallback), local expiry; "View details" fills the lookup (US2-6)
   - **Tests**: `CreateLinkForm.test.tsx`: success shows short URL and copy writes it; expiry sent with offset; field errors shown and values kept; 409 message; button disabled while pending
 - [ ] T003 [US2][US3] Lookup and statistics: details (original URL, created, expiry or "never", expired badge, total clicks) and stats (30 days with proportional bars, up to 5 referrers, "No referrers yet"); unknown code, 429 and unreachable messages; live region

@@ -487,3 +487,7 @@ $RECYCLE.BIN/
 *.db
 *.db-shm
 *.db-wal
+
+# Web UI (feature 004): dependencies and the build output the API serves (produced by `npm run build` / Docker)
+web/node_modules/
+src/UrlShortener.Api/wwwroot/
