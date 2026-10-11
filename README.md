@@ -190,6 +190,7 @@ requests.http                   Sample requests
 
 ## Known limitations
 
+- **Runs locally, not deployed**: the production design on AWS is in [docs/deployment.md](docs/deployment.md).
 - **Single instance**: the click queue and rate-limit budgets live in memory; SQLite allows one writer.
 - **At-most-once analytics**: clicks queued during overload or lost in a failed batch are dropped
   (and logged), never retried ([ADR-005](docs/adr/005-async-click-recording.md)).
@@ -198,12 +199,16 @@ requests.http                   Sample requests
 - **No accounts**: anyone who knows a code can read its statistics (aggregates only, no per-visitor data).
 - **No deduplication**: shortening the same URL twice gives two links ([ADR-006](docs/adr/006-idempotency.md)).
 
+Full list with failure scenarios and trade-offs: [docs/risks-and-tradeoffs.md](docs/risks-and-tradeoffs.md).
+
 ## Documentation map
 
 | Document | Contents |
 |---|---|
 | [docs/architecture.md](docs/architecture.md) | Components, layers, request pipeline, sequence diagrams, data model, AI-assisted workflow, scaling path |
 | [docs/testing.md](docs/testing.md) | Test pyramid, real coverage numbers, techniques, what is not tested |
+| [docs/risks-and-tradeoffs.md](docs/risks-and-tradeoffs.md) | Risk register with mitigations and validation, failure scenarios, trade-offs, limitations, assumptions |
+| [docs/deployment.md](docs/deployment.md) | Production design on AWS (ECS Fargate, ALB, RDS, SQS, ElastiCache, CloudFront/WAF), delivery pipeline, demo hosting options |
 | [docs/adr/](docs/adr/README.md) | 10 architecture decision records |
 | [docs/scenarios/01-greenfield.md](docs/scenarios/01-greenfield.md) | Greenfield: building the core service from a requirement |
 | [docs/scenarios/02-brownfield.md](docs/scenarios/02-brownfield.md) | Brownfield: impact analysis, expiry, analytics, off-path recording, migration and rollback |
@@ -223,13 +228,13 @@ requests.http                   Sample requests
 | Ambiguous scenario | [docs/scenarios/03-ambiguous.md](docs/scenarios/03-ambiguous.md), [specs/003-reliability-abuse-protection/](specs/003-reliability-abuse-protection/), merged PRs #18–#19 |
 | Setup instructions | This README ([Quick start](#quick-start), [Configuration](#configuration)) |
 | Testing approach | [docs/testing.md](docs/testing.md) (98% line coverage of hand-written code), [CI workflow](.github/workflows/ci.yml) (coverage report uploaded as an artifact) |
-| Limitations and trade-offs | [Known limitations](#known-limitations), consequences sections of each [ADR](docs/adr/README.md), risks sections of the scenario docs |
+| Limitations and trade-offs | [docs/risks-and-tradeoffs.md](docs/risks-and-tradeoffs.md), [Known limitations](#known-limitations), consequences sections of each [ADR](docs/adr/README.md) |
 | 1) Requirement understanding | `spec.md` files with their Clarifications sections, e.g. [002](specs/002-brownfield-analytics-expiry/spec.md), [003 interpretation](docs/scenarios/03-ambiguous.md#2-interpretation) |
 | 2) Task decomposition | `tasks.md` files with dependencies and order, e.g. [002](specs/002-brownfield-analytics-expiry/tasks.md) |
 | 3) Codebase reasoning (brownfield) | [Impact analysis](docs/scenarios/02-brownfield.md#3-impact-analysis), written and verified before any code |
 | 4) AI-assisted execution + traceability | [docs/ai-usage-log.md](docs/ai-usage-log.md), `AI-Assisted:` commit trailers |
 | 5) Engineering output | [src/](src/), [tests/](tests/), [web/](web/), OpenAPI contract + Swagger, [migrations](src/UrlShortener.Infrastructure/Persistence/Migrations/) |
-| 6) Validation and risk control | CI quality gates, mutation checks and validation sections in the scenario docs |
+| 6) Validation and risk control | [docs/risks-and-tradeoffs.md](docs/risks-and-tradeoffs.md), [docs/testing.md](docs/testing.md), CI quality gates, validation sections in the scenario docs |
 | 7) Controlled oversight | [PR template](.github/pull_request_template.md) with sign-off checklist, PR history, `High-impact:` commit lines |
 | 8) Final engineering summary | Engineering summary (Phase 6, in progress) |
 
