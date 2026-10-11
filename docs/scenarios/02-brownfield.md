@@ -212,7 +212,7 @@ Brownfield-specific choices in the decomposition:
 | #14 | T006–T009 | `expiresAt` rule; `RedirectResolution` (Found / NotFound / Expired); 410 Gone; atomic reclaim of expired aliases |
 | #15 | T010–T013, T022 | Bounded channel recorder; background writer; redirect switch-over; resilience tests; the CI fix (T022) |
 | #16 | T014–T015 | Statistics reader; `GET /api/links/{code}/stats` |
-| (this PR) | T016–T021 | ADR-005, ADR-008; `requests.http`; Swagger examples; quickstart validation; this document; close-out |
+| #17 | T016–T021 | ADR-005, ADR-008; `requests.http`; Swagger examples; quickstart validation; this document; close-out |
 
 **High-impact sign-offs** (all given by the engineer before the commit): migration (T005), input
 validation (T006), redirect path (T008, T012), data deletion and concurrency (T009), new dependency
