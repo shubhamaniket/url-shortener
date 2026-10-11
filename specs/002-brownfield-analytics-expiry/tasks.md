@@ -145,8 +145,9 @@ listed under "Changed tests" in that task, with the reason (research R10, spec S
 ## Phase 6: Polish & Cross-Cutting Concerns
 
 - [x] T016 [P] Write docs/adr/005-async-click-recording.md (at-most-once, DropOldest, shutdown flush, orphan events after reclaim, drop logs delayed while the writer is blocked) and docs/adr/008-stored-click-count.md (stored vs derived, Clarification Q1)
-- [ ] T017 [P] Extend requests.http with feature 002 scenarios (expiry, 410, expiry validation, reclaim, stats with Referer); update the root quickstart pointers
+- [x] T017 [P] Extend requests.http with feature 002 scenarios (expiry, 410, expiry validation, reclaim, stats with Referer); update the root quickstart pointers
   - **AC**: every new request executed against the running app with the expected status
+  - **Outcome**: Part 2 (F2-1 … F2-8, 16 requests) added; the header points at both quickstarts and the v0.2.0 contract (there is no root README yet: Phase 6). The whole file (29 requests, both parts) was executed top to bottom against the running app on a fresh database by a small runner that parses the `.http` file itself (variables, named responses, `$datetime`): 29/29 expected statuses, including 410 after the one-minute expiry and the reclaim. Feature 001 request 3 reworded: click counts now follow within about a second
 - [ ] T018 Run specs/002-brownfield-analytics-expiry/quickstart.md: scenarios 1–10 on a database migrated from feature 001 data, privacy inspection of `ClickEvents`, latency loop (SC-002); engineer verifies Swagger and Postman (v0.2.0 contract) by hand
   - **AC**: all scenarios as expected; real numbers recorded for the scenario doc
 - [ ] T019 Complete docs/scenarios/02-brownfield.md sections 2 and 4–8: interpretation (clarifications, incl. the engineer's override on Q2), decomposition, execution, validation (regression baseline vs final counts, changed tests with reasons), before/after behaviour, migration steps and rollback, risks, next steps

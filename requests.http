@@ -1,9 +1,11 @@
-# URL Shortener — sample requests (quickstart scenarios 1–12)
+# URL Shortener — sample requests
+#   Part 1: feature 001 quickstart scenarios 1–12 (specs/001-greenfield-core/quickstart.md)
+#   Part 2: feature 002 — expiry, 410 Gone, reclaim, statistics (specs/002-brownfield-analytics-expiry/quickstart.md)
 #
 # Run with the VS Code "REST Client" extension (humao.rest-client): click "Send Request" above
 # each request, top to bottom. Later requests reuse the code returned by earlier ones.
 # Start the API first:  dotnet run --project src/UrlShortener.Api --launch-profile http
-# Contract: specs/001-greenfield-core/contracts/openapi.yaml
+# Contract (current, v0.2.0): specs/002-brownfield-analytics-expiry/contracts/openapi.yaml
 
 @baseUrl = http://localhost:5058
 
@@ -11,6 +13,11 @@
 # Change these two values (same letters, different case) or delete the dev database to re-run.
 @alias = Team-Offsite-Demo
 @aliasOtherCase = team-offsite-demo
+
+# Part 2: an alias that expires one minute after creation and is then reclaimed (F2-6). Once it
+# has expired it can be claimed again, so re-running Part 2 after a minute works without changes.
+@seasonalAlias = Spring-Sale-Demo
+@seasonalAliasOtherCase = spring-sale-demo
 
 ### 1. Create a short link (generated code) → 201, Location header, clickCount 0
 # @name create
@@ -25,7 +32,7 @@ Content-Type: application/json
 # REST Client follows redirects by default; set "rest-client.followredirect": false to see the 302.
 GET {{baseUrl}}/{{create.response.body.$.code}}
 
-### 3. Link details → clickCount reflects the redirects above (reading details is not a click)
+### 3. Link details → 200; clickCount includes the redirect above within about a second (clicks are stored in the background; reading details is not a click)
 GET {{baseUrl}}/api/links/{{create.response.body.$.code}}
 
 ### 4a. Custom alias → 201 with the alias as the code (case kept)
@@ -105,3 +112,92 @@ Content-Type: application/json
   "url": "https://example.com",
   "customAlias": "API"
 }
+
+# ═══════════════════════════════════════════════════════════════════════════════════════════════
+# Part 2 — feature 002: expiry, 410 Gone, reclaim, statistics
+# Click counts and statistics are filled in by a background writer: allow a second after redirects.
+# ═══════════════════════════════════════════════════════════════════════════════════════════════
+
+### F2-1. Expiry with an offset → 201, expiresAtUtc is the same instant in UTC (2099-12-31T18:29:00Z)
+POST {{baseUrl}}/api/links
+Content-Type: application/json
+
+{
+  "url": "https://example.com/flash-sale",
+  "expiresAt": "2099-12-31T23:59:00+05:30"
+}
+
+### F2-2. Expiry without a time zone → 400, errors.expiresAt "The expiry needs a time zone, ..."
+POST {{baseUrl}}/api/links
+Content-Type: application/json
+
+{
+  "url": "https://example.com/flash-sale",
+  "expiresAt": "2099-12-31T23:59:00"
+}
+
+### F2-3. Expiry in the past → 400, errors.expiresAt "The expiry must be in the future."
+POST {{baseUrl}}/api/links
+Content-Type: application/json
+
+{
+  "url": "https://example.com/flash-sale",
+  "expiresAt": "2020-01-01T00:00:00Z"
+}
+
+### F2-4a. Alias that expires in one minute → 201
+# @name seasonal
+POST {{baseUrl}}/api/links
+Content-Type: application/json
+
+{
+  "url": "https://example.com/spring-sale",
+  "customAlias": "{{seasonalAlias}}",
+  "expiresAt": "{{$datetime iso8601 1 m}}"
+}
+
+### F2-4b. Before expiry → 302
+GET {{baseUrl}}/{{seasonal.response.body.$.code}}
+
+### F2-5a. Wait one minute, then → 410 ProblemDetails "Link expired", Cache-Control: no-store
+GET {{baseUrl}}/{{seasonal.response.body.$.code}}
+
+### F2-5b. Details of the expired link still work → 200 with expiresAtUtc and the click from F2-4b
+GET {{baseUrl}}/api/links/{{seasonal.response.body.$.code}}
+
+### F2-5c. Statistics of the expired link still work → 200
+GET {{baseUrl}}/api/links/{{seasonal.response.body.$.code}}/stats
+
+### F2-6a. Reclaim the expired alias, in another letter case → 201; the old link and its history are deleted
+POST {{baseUrl}}/api/links
+Content-Type: application/json
+
+{
+  "url": "https://example.com/autumn-sale",
+  "customAlias": "{{seasonalAliasOtherCase}}"
+}
+
+### F2-6b. The code now redirects to the new URL → 302 to https://example.com/autumn-sale
+GET {{baseUrl}}/{{seasonal.response.body.$.code}}
+
+### F2-7a. Statistics: create a fresh link to follow with and without a referrer → 201
+# @name stats
+POST {{baseUrl}}/api/links
+Content-Type: application/json
+
+{
+  "url": "https://example.com/stats-demo"
+}
+
+### F2-7b. Follow with a referrer (send 3 times) → 302; only the host news.example is stored
+GET {{baseUrl}}/{{stats.response.body.$.code}}
+Referer: https://news.example/article?u=1
+
+### F2-7c. Follow without a referrer (send 2 times) → 302; counted as (direct)
+GET {{baseUrl}}/{{stats.response.body.$.code}}
+
+### F2-7d. Statistics → 200, totalClicks 5, 30 dailyClicks with today 5, topReferrers news.example 3 then (direct) 2
+GET {{baseUrl}}/api/links/{{stats.response.body.$.code}}/stats
+
+### F2-8. Statistics for an unknown code → 404 ProblemDetails
+GET {{baseUrl}}/api/links/zzzzzzz/stats
