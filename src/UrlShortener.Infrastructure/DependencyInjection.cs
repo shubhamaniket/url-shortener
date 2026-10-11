@@ -30,6 +30,7 @@ public static class DependencyInjection
         services.AddSingleton<IClickRecorder>(provider => provider.GetRequiredService<ChannelClickRecorder>());
         services.AddScoped<IClickEventStore, ClickEventStore>();
         services.AddHostedService<ClickEventWriter>();
+        services.AddScoped<IClickStatsReader, ClickStatsReader>();
 
         return services;
     }

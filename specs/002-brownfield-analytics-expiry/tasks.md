@@ -128,9 +128,10 @@ listed under "Changed tests" in that task, with the reason (research R10, spec S
 
 **Independent Test**: redirects with varied referrers → stats match exactly.
 
-- [ ] T014 [US3] Implement `IClickStatsReader` / `ClickStatsReader` and `LinkStatistics` DTO (src/UrlShortener.Application/Abstractions/, src/UrlShortener.Infrastructure/Links/ClickStatsReader.cs), research R7
+- [x] T014 [US3] Implement `IClickStatsReader` / `ClickStatsReader` and `LinkStatistics` DTO (src/UrlShortener.Application/Abstractions/, src/UrlShortener.Infrastructure/Links/ClickStatsReader.cs), research R7
   - **AC**: total = stored `ClickCount`; exactly 30 UTC days oldest first with zeros; top 5 sources by count desc then source asc; `NULL` → `(direct)`; aggregation in the database (or the documented in-memory fallback, with the reason recorded) using the index
   - **Tests**: tests/UrlShortener.IntegrationTests/Persistence/ClickStatsReaderTests.cs (seeded events, fixed "today"): padding and boundaries (day 29 included, day 30 excluded), 7 sources → top 5 with tie order, `(direct)` ranking, link with no events
+  - **Outcome of the R7 risk**: EF Core 8 translates both aggregations for SQLite (`strftime(..., 'start of day')` + `GROUP BY` for days; `COALESCE(ReferrerHost, '(direct)')` + `GROUP BY ... ORDER BY COUNT(*) DESC, key LIMIT 5` for referrers), so the in-memory fallback is not needed; a test asserts both commands contain `GROUP BY`. Interface takes the `ShortLink` (code, id) and reads the stored total itself
 - [ ] T015 [US3] `LinkService.GetStatsAsync` (shared `FindAsync`, ignores expiry) and `GET /api/links/{code}/stats` on LinksController with `LinkStatsResponse`
   - **AC**: 200 per contract; 404 ProblemDetails for unknown; expired link → 200; never records a click; `[ProducesResponseType]` 200/404
   - **Tests**: unit GetStatsTests; integration tests/UrlShortener.IntegrationTests/StatsTests.cs: a reclaimed code's stats start from zero; 3 redirects with `Referer: https://news.example/a?u=1` + 2 without → total 5, today 5, 30 entries, `news.example` 3 then `(direct)` 2 (after `Eventually`); alias any case; expired 200; unknown 404; reading stats twice does not change counts
