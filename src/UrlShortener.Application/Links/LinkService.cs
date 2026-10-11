@@ -11,6 +11,7 @@ public sealed partial class LinkService(
     IShortLinkRepository repository,
     IShortCodeGenerator codeGenerator,
     IClickRecorder clickRecorder,
+    IClickStatsReader statsReader,
     IOptions<ShortLinkOptions> options,
     TimeProvider timeProvider,
     ILogger<LinkService> logger) : ILinkService
@@ -119,6 +120,19 @@ public sealed partial class LinkService(
     {
         var link = await FindAsync(code, cancellationToken);
         return link is null ? null : ToDetails(link);
+    }
+
+    /// <remarks>Ignores expiry (FR-005) and records no click; "today" is the current UTC date.</remarks>
+    public async Task<LinkStatistics?> GetStatsAsync(string code, CancellationToken cancellationToken)
+    {
+        var link = await FindAsync(code, cancellationToken);
+        if (link is null)
+        {
+            return null;
+        }
+
+        var todayUtc = DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
+        return await statsReader.GetAsync(link, todayUtc, cancellationToken);
     }
 
     /// <summary>One indexed lookup, then the case rules: aliases in any case, generated codes exactly.</summary>

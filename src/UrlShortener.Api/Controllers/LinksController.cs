@@ -35,4 +35,17 @@ public sealed class LinksController(ILinkService linkService) : ControllerBase
         var details = await linkService.GetDetailsAsync(code, cancellationToken);
         return details is null ? NotFound() : LinkResponse.From(details);
     }
+
+    /// <summary>
+    /// Get click statistics: all-time total, clicks per UTC day for the last 30 days, and the top 5
+    /// referrers. Public like details, also for expired links; reading statistics is not a click.
+    /// </summary>
+    [HttpGet("{code}/stats")]
+    [ProducesResponseType<LinkStatsResponse>(StatusCodes.Status200OK, "application/json")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<ActionResult<LinkStatsResponse>> GetStats(string code, CancellationToken cancellationToken)
+    {
+        var statistics = await linkService.GetStatsAsync(code, cancellationToken);
+        return statistics is null ? NotFound() : LinkStatsResponse.From(statistics);
+    }
 }

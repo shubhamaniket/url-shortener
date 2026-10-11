@@ -20,4 +20,10 @@ public interface ILinkService
     /// details never records a click (FR-018) and works for expired links (FR-005).
     /// </summary>
     Task<LinkDetails?> GetDetailsAsync(string code, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Returns a link's click statistics (total, the last 30 UTC days, top 5 referrers), or <c>null</c>
+    /// when no link matches. Works for expired links and never records a click (FR-016–FR-022).
+    /// </summary>
+    Task<LinkStatistics?> GetStatsAsync(string code, CancellationToken cancellationToken);
 }
