@@ -130,6 +130,7 @@ public class ExpiryTests
         _repository,
         _generator,
         _recorder,
+        new FakeClickStatsReader(),
         Microsoft.Extensions.Options.Options.Create(new ShortLinkOptions { PublicBaseUrl = "http://localhost:5058" }),
         new FixedTimeProvider(new DateTimeOffset(now)),
         NullLogger<LinkService>.Instance);

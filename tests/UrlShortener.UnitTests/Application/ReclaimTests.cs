@@ -104,6 +104,7 @@ public class ReclaimTests
         repository,
         new ScriptedCodeGenerator(codes.Length == 0 ? ["Unused0"] : codes),
         new FakeClickRecorder(),
+        new FakeClickStatsReader(),
         Microsoft.Extensions.Options.Options.Create(new ShortLinkOptions { PublicBaseUrl = "http://localhost:5058" }),
         new FixedTimeProvider(new DateTimeOffset(now)),
         NullLogger<LinkService>.Instance);

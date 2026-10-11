@@ -107,6 +107,7 @@ public class CreateLinkTests
         _repository,
         generator,
         new FakeClickRecorder(),
+        new FakeClickStatsReader(),
         Microsoft.Extensions.Options.Options.Create(new ShortLinkOptions { PublicBaseUrl = "http://localhost:5058" }),
         new FixedTimeProvider(Now),
         NullLogger<LinkService>.Instance);

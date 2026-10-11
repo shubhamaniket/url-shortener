@@ -8,7 +8,7 @@ namespace UrlShortener.IntegrationTests;
 /// Fails when the API generated from the code drifts from the reviewed contract in
 /// specs/002-brownfield-analytics-expiry/contracts/openapi.yaml (v0.2.0, which extends feature 001's;
 /// research R14 of feature 001, R8 of feature 002). The expected values below are copied from that
-/// file; change both together. <c>GET /api/links/{code}/stats</c> joins with feature 002 task T015. <c>GET /{code}</c> and <c>/health</c> are not in the
+/// file; change both together. <c>GET /{code}</c> and <c>/health</c> are not in the
 /// generated document by design (hidden / not a controller) and are covered by their own tests.
 /// </summary>
 public sealed class OpenApiContractTests(ApiFactory factory) : IClassFixture<ApiFactory>
@@ -17,6 +17,7 @@ public sealed class OpenApiContractTests(ApiFactory factory) : IClassFixture<Api
     {
         ["POST /api/links"] = ["201", "400", "409", "500"],
         ["GET /api/links/{code}"] = ["200", "404"],
+        ["GET /api/links/{code}/stats"] = ["200", "404"],
     };
 
     [Fact]
@@ -41,6 +42,11 @@ public sealed class OpenApiContractTests(ApiFactory factory) : IClassFixture<Api
     [Theory]
     [InlineData("CreateLinkRequest", new[] { "customAlias", "expiresAt", "url" })]
     [InlineData("LinkResponse", new[] { "clickCount", "code", "createdAtUtc", "expiresAtUtc", "originalUrl", "shortUrl" })]
+
+    // Statistics are aggregates only: no field can carry per-click or per-visitor data (FR-020).
+    [InlineData("LinkStatsResponse", new[] { "code", "dailyClicks", "topReferrers", "totalClicks" })]
+    [InlineData("DailyClicksResponse", new[] { "clicks", "date" })]
+    [InlineData("ReferrerClicksResponse", new[] { "clicks", "source" })]
     public async Task GeneratedSchemasHaveContractFields(string schema, string[] expectedFields)
     {
         var document = await GetGeneratedDocumentAsync();
