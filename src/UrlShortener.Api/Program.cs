@@ -9,6 +9,7 @@ using UrlShortener.Api.Health;
 using UrlShortener.Application;
 using UrlShortener.Application.Options;
 using UrlShortener.Infrastructure;
+using UrlShortener.Infrastructure.Links;
 using UrlShortener.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,6 +28,8 @@ builder.Services.AddOptions<ShortLinkOptions>()
     .Bind(builder.Configuration.GetSection(ShortLinkOptions.SectionName))
     .ValidateOnStart();
 builder.Services.AddSingleton<IValidateOptions<ShortLinkOptions>, ShortLinkOptionsValidator>();
+builder.Services.AddOptions<ClickRecordingOptions>()
+    .Bind(builder.Configuration.GetSection(ClickRecordingOptions.SectionName));
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure();

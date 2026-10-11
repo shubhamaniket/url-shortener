@@ -24,6 +24,13 @@ public static class DependencyInjection
         services.AddSingleton<IShortCodeGenerator, Base62CodeGenerator>();
         services.AddScoped<IClickRecorder, DbClickRecorder>();
 
+        // Background click pipeline (feature 002). Built and running, but nothing is queued until
+        // the redirect switches from DbClickRecorder to the channel recorder.
+        services.AddOptions<ClickRecordingOptions>();
+        services.AddSingleton<ChannelClickRecorder>();
+        services.AddScoped<IClickEventStore, ClickEventStore>();
+        services.AddHostedService<ClickEventWriter>();
+
         return services;
     }
 }
