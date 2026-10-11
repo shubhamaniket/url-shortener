@@ -9,11 +9,11 @@ public interface ILinkService
     Task<LinkDetails> CreateAsync(CreateLinkCommand command, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Resolves a code to its original URL and records the click best-effort: a recording failure
-    /// never changes the result (FR-015a). Unknown codes give <see cref="RedirectResolution.NotFound"/>;
+    /// Resolves a code to its original URL and queues the click for background storage: a recording
+    /// failure never changes the result (FR-015a). Only <paramref name="click"/>'s reduced values are kept. Unknown codes give <see cref="RedirectResolution.NotFound"/>;
     /// expired links give <see cref="RedirectResolution.Expired"/> and record no click (FR-004).
     /// </summary>
-    Task<RedirectResolution> ResolveForRedirectAsync(string code, CancellationToken cancellationToken);
+    Task<RedirectResolution> ResolveForRedirectAsync(string code, ClickContext click, CancellationToken cancellationToken);
 
     /// <summary>
     /// Returns a link's details and click count, or <c>null</c> when no link matches. Reading

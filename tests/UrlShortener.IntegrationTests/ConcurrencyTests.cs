@@ -28,12 +28,17 @@ public sealed class ConcurrencyTests(ApiFactory factory) : IClassFixture<ApiFact
 
         Assert.All(responses, response => Assert.Equal(HttpStatusCode.Found, response.StatusCode));
 
-        await using var scope = factory.Services.CreateAsyncScope();
-        var clickCount = await scope.ServiceProvider.GetRequiredService<AppDbContext>().ShortLinks
-            .Where(link => link.Code == code)
-            .Select(link => link.ClickCount)
-            .SingleAsync();
-        Assert.Equal(ParallelRequests, clickCount);
+        // Every click is stored exactly once, in the background (FR-012).
+        await Eventually.AssertAsync(
+            async () =>
+            {
+                await using var scope = factory.Services.CreateAsyncScope();
+                return await scope.ServiceProvider.GetRequiredService<AppDbContext>().ShortLinks
+                    .Where(link => link.Code == code)
+                    .Select(link => link.ClickCount)
+                    .SingleAsync() == ParallelRequests;
+            },
+            $"{ParallelRequests} clicks counted");
     }
 
     [Fact]

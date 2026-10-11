@@ -22,7 +22,14 @@ public static class DependencyInjection
             provider.GetRequiredService<IConfiguration>().GetConnectionString("Default") ?? DefaultConnectionString));
         services.AddScoped<IShortLinkRepository, ShortLinkRepository>();
         services.AddSingleton<IShortCodeGenerator, Base62CodeGenerator>();
-        services.AddScoped<IClickRecorder, DbClickRecorder>();
+
+        // Click recording (feature 002): redirects queue clicks in memory; the hosted writer stores
+        // them in batches. One recorder instance serves both sides.
+        services.AddOptions<ClickRecordingOptions>();
+        services.AddSingleton<ChannelClickRecorder>();
+        services.AddSingleton<IClickRecorder>(provider => provider.GetRequiredService<ChannelClickRecorder>());
+        services.AddScoped<IClickEventStore, ClickEventStore>();
+        services.AddHostedService<ClickEventWriter>();
 
         return services;
     }

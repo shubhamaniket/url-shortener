@@ -50,7 +50,7 @@ public sealed class ExpiryTests(ApiFactory factory) : IClassFixture<ApiFactory>
 
         var before = await client.GetAsync(Relative(code));
         Assert.Equal(HttpStatusCode.Found, before.StatusCode);
-        Assert.Equal(1, await ClickCountAsync(code));
+        await Eventually.AssertAsync(async () => await ClickCountAsync(code) == 1, "the click before expiry counted");
 
         factory.Clock.Advance(TimeSpan.FromMinutes(11));
         var after = await client.GetAsync(Relative(code));
@@ -65,6 +65,7 @@ public sealed class ExpiryTests(ApiFactory factory) : IClassFixture<ApiFactory>
         Assert.Equal("https://tools.ietf.org/html/rfc9110#section-15.5.11", problem.GetProperty("type").GetString());
         Assert.True(problem.TryGetProperty("traceId", out _));
         Assert.DoesNotContain("example.com", problem.GetRawText(), StringComparison.Ordinal);
+        await WaitForQueuedClicksAsync();
         Assert.Equal(1, await ClickCountAsync(code));
     }
 
@@ -101,6 +102,18 @@ public sealed class ExpiryTests(ApiFactory factory) : IClassFixture<ApiFactory>
         factory.Clock.Advance(TimeSpan.FromDays(3650));
 
         Assert.Equal(HttpStatusCode.Found, (await factory.CreateClient(NoRedirects).GetAsync(Relative(code))).StatusCode);
+    }
+
+    /// <summary>
+    /// Clicks are stored in the background, in the order they were queued, by a single writer. Once a
+    /// fresh marker click is stored, any click queued before it has been stored too, so an absent
+    /// click really was never recorded.
+    /// </summary>
+    private async Task WaitForQueuedClicksAsync()
+    {
+        var marker = await CreateLinkAsync(new { url = "https://example.com/marker" });
+        Assert.Equal(HttpStatusCode.Found, (await factory.CreateClient(NoRedirects).GetAsync(Relative(marker))).StatusCode);
+        await Eventually.AssertAsync(async () => await ClickCountAsync(marker) == 1, "the marker click stored");
     }
 
     private string InMinutes(int minutes) =>

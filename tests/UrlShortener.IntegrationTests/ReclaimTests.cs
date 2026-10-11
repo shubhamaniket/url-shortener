@@ -45,9 +45,11 @@ public sealed class ReclaimTests(ApiFactory factory) : IClassFixture<ApiFactory>
         Assert.Equal(HttpStatusCode.Found, redirect.StatusCode);
         Assert.Equal("https://example.com/new", redirect.Headers.Location?.OriginalString);
 
+        await Eventually.AssertAsync(
+            async () => (await ReadJsonAsync(await factory.CreateClient().GetAsync(DetailsUri(alias)))).GetProperty("clickCount").GetInt64() == 1,
+            "the new link's click counted");
         var details = await ReadJsonAsync(await factory.CreateClient().GetAsync(DetailsUri(alias)));
         Assert.Equal("https://example.com/new", details.GetProperty("originalUrl").GetString());
-        Assert.Equal(1, details.GetProperty("clickCount").GetInt64());
 
         await using var scope = factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();

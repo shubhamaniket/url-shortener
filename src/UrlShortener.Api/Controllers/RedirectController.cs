@@ -19,7 +19,9 @@ public sealed class RedirectController(ILinkService linkService) : ControllerBas
     [HttpGet("{code:regex(^[[A-Za-z0-9_-]]{{3,30}}$)}")]
     public async Task<IActionResult> Follow(string code, CancellationToken cancellationToken)
     {
-        var resolution = await linkService.ResolveForRedirectAsync(code, cancellationToken);
+        // Only these two headers reach the Application layer; the client's IP address never does (FR-010).
+        var click = new ClickContext(Request.Headers.Referer.FirstOrDefault(), Request.Headers.UserAgent.FirstOrDefault());
+        var resolution = await linkService.ResolveForRedirectAsync(code, click, cancellationToken);
         if (resolution.Outcome == RedirectOutcome.Expired)
         {
             // Gone for good, unless the alias is later reclaimed; never cached, so a reclaimed code

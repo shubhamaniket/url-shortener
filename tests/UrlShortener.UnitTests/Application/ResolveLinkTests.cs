@@ -26,7 +26,7 @@ public class ResolveLinkTests
     {
         var recorder = new FakeClickRecorder();
 
-        var resolution = await CreateService(recorder).ResolveForRedirectAsync("Abc123x", CancellationToken.None);
+        var resolution = await CreateService(recorder).ResolveForRedirectAsync("Abc123x", ClickContext.None, CancellationToken.None);
 
         Assert.Equal(RedirectResolution.Found(Destination), resolution);
         Assert.Single(recorder.RecordedLinkIds);
@@ -37,7 +37,7 @@ public class ResolveLinkTests
     [InlineData("TEAM-OFFSITE")]
     public async Task ResolvesCustomAliasInAnyCase(string code)
     {
-        var resolution = await CreateService(new FakeClickRecorder()).ResolveForRedirectAsync(code, CancellationToken.None);
+        var resolution = await CreateService(new FakeClickRecorder()).ResolveForRedirectAsync(code, ClickContext.None, CancellationToken.None);
 
         Assert.Equal(RedirectResolution.Found("https://example.com/offsite"), resolution);
     }
@@ -50,7 +50,7 @@ public class ResolveLinkTests
     {
         var recorder = new FakeClickRecorder();
 
-        var resolution = await CreateService(recorder).ResolveForRedirectAsync(code, CancellationToken.None);
+        var resolution = await CreateService(recorder).ResolveForRedirectAsync(code, ClickContext.None, CancellationToken.None);
 
         Assert.Equal(RedirectResolution.NotFound, resolution);
         Assert.Empty(recorder.RecordedLinkIds);
@@ -61,7 +61,7 @@ public class ResolveLinkTests
     {
         var recorder = new FakeClickRecorder(new InvalidOperationException("database is locked"));
 
-        var resolution = await CreateService(recorder).ResolveForRedirectAsync("Abc123x", CancellationToken.None);
+        var resolution = await CreateService(recorder).ResolveForRedirectAsync("Abc123x", ClickContext.None, CancellationToken.None);
 
         Assert.Equal(RedirectResolution.Found(Destination), resolution);
         var entry = Assert.Single(_logger.Entries, e => e.Level >= LogLevel.Warning);
@@ -72,24 +72,42 @@ public class ResolveLinkTests
     }
 
     [Fact]
-    public async Task RecorderTimeoutThatIsNotTheRequestCancellationStillReturnsUrl()
+    public async Task RecorderThrowingCancellationStillReturnsUrl()
     {
-        var recorder = new FakeClickRecorder(new OperationCanceledException("recorder timed out"));
+        var recorder = new FakeClickRecorder(new OperationCanceledException("recorder shut down"));
 
-        var resolution = await CreateService(recorder).ResolveForRedirectAsync("Abc123x", CancellationToken.None);
+        var resolution = await CreateService(recorder).ResolveForRedirectAsync("Abc123x", ClickContext.None, CancellationToken.None);
 
         Assert.Equal(RedirectResolution.Found(Destination), resolution);
     }
 
     [Fact]
-    public async Task CancelledRequestPropagatesCancellation()
+    public async Task CancelledRequestPropagatesCancellationAndRecordsNothing()
     {
         using var cancellation = new CancellationTokenSource();
         await cancellation.CancelAsync();
-        var recorder = new FakeClickRecorder(new OperationCanceledException(cancellation.Token));
+        var recorder = new FakeClickRecorder();
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
-            CreateService(recorder).ResolveForRedirectAsync("Abc123x", cancellation.Token));
+            CreateService(recorder).ResolveForRedirectAsync("Abc123x", ClickContext.None, cancellation.Token));
+        Assert.Empty(recorder.Recorded);
+    }
+
+    [Fact]
+    public async Task QueuesOnlyTheReducedClickAtTheCurrentTime()
+    {
+        var recorder = new FakeClickRecorder();
+        var context = new ClickContext(
+            "https://user:secret@News.Example/article?u=42",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 14.6; rv:130.0) Gecko/20100101 Firefox/130.0");
+
+        await CreateService(recorder).ResolveForRedirectAsync("Abc123x", context, CancellationToken.None);
+
+        var click = Assert.Single(recorder.Recorded);
+        Assert.Equal(_repository.Links.Single(link => link.Code == "Abc123x").Id, click.ShortLinkId);
+        Assert.Equal(CreatedAt, click.OccurredAtUtc);
+        Assert.Equal("news.example", click.ReferrerHost);
+        Assert.Equal(UserAgentFamily.Firefox, click.UserAgentFamily);
     }
 
     private LinkService CreateService(FakeClickRecorder recorder) => new(

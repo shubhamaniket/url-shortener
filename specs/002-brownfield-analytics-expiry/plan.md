@@ -131,3 +131,8 @@ changes follow the impact analysis file list (§3.2).
 2. **R6 — reclaiming deletes the expired link and its click events** (data minimisation) rather
    than keeping them unreachable under a tombstone code.
 3. **R1 — field naming**: request `expiresAt` (any zone), response `expiresAtUtc` (always UTC).
+4. **New dependency (approved during T011)**: `Microsoft.Extensions.Hosting.Abstractions` 8.0.1 in
+   Infrastructure, for `BackgroundService`. The Technical Context's "no new packages" held for the Api
+   (shared framework) but not for the Infrastructure class library. First-party; the Api already ships
+   the same assembly, so no new code is deployed. Alternatives rejected: a host wrapper in the Api
+   (extra class only to avoid the package) and a framework reference (couples the data layer to ASP.NET Core).

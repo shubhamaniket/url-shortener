@@ -152,6 +152,26 @@ delivery of the click queue).
 
 *(Completed in T019.)*
 
+### Constitution Principle V deviation closed (T012, 2026-10-11)
+
+Feature 001 recorded one deviation from Principle V ("the redirect path must be fast and must not
+fail because analytics fails"): each redirect awaited a synchronous `UPDATE ... ClickCount + 1`
+(`DbClickRecorder`), with failures caught but the database still on the hot path. T012 removed it:
+
+- The redirect now builds a privacy-reduced `ClickEvent` (referrer host and browser family only; the
+  client IP never reaches the Application layer) and calls the non-blocking
+  `IClickRecorder.TryRecord`, an in-memory enqueue into a bounded channel (10 000, drop-oldest).
+- The hosted `ClickEventWriter` stores events and increases `ClickCount` in batched transactions.
+  Storage failures are logged and discarded there (at-most-once, ADR-005); they cannot reach the
+  redirect.
+- Evidence: integration tests show a redirect still returns 302 when the recorder throws and when
+  storage throws (failure logged); writer tests show batches, deleted-link filtering, failure
+  recovery and shutdown flush. T013 adds the overload proof: redirects complete while the writer is
+  blocked.
+- Trade-off accepted by the engineer: counts are eventually consistent (within 5 seconds, FR-012),
+  so feature 001 tests that read a count straight after redirecting now wait for it (tasks.md T012,
+  "Changed tests").
+
 ## 6. Validation
 
 ### Regression baseline (T001)

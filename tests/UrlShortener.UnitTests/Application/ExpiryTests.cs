@@ -78,7 +78,7 @@ public class ExpiryTests
     {
         SeedExpiringLink();
 
-        var resolution = await CreateService(ExpiresAt.AddTicks(-1)).ResolveForRedirectAsync("Abc123x", CancellationToken.None);
+        var resolution = await CreateService(ExpiresAt.AddTicks(-1)).ResolveForRedirectAsync("Abc123x", ClickContext.None, CancellationToken.None);
 
         Assert.Equal(RedirectResolution.Found(Destination), resolution);
         Assert.Single(_recorder.RecordedLinkIds);
@@ -93,7 +93,7 @@ public class ExpiryTests
         SeedExpiringLink();
 
         var resolution = await CreateService(ExpiresAt.AddSeconds(secondsAfterExpiry))
-            .ResolveForRedirectAsync("Abc123x", CancellationToken.None);
+            .ResolveForRedirectAsync("Abc123x", ClickContext.None, CancellationToken.None);
 
         Assert.Equal(RedirectResolution.Expired, resolution);
         Assert.False(resolution.IsFound);
@@ -105,7 +105,7 @@ public class ExpiryTests
     {
         _repository.Seed(ShortLink.CreateWithCustomAlias("Flash-Sale", Destination, Now, ExpiresAt));
 
-        var resolution = await CreateService(ExpiresAt).ResolveForRedirectAsync("FLASH-SALE", CancellationToken.None);
+        var resolution = await CreateService(ExpiresAt).ResolveForRedirectAsync("FLASH-SALE", ClickContext.None, CancellationToken.None);
 
         Assert.Equal(RedirectResolution.Expired, resolution);
     }
