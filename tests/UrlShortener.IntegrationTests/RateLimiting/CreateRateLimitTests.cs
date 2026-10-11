@@ -83,11 +83,12 @@ public sealed class CreateRateLimitTests(ApiFactory factory) : IClassFixture<Api
             await client.CreateLinkAsync("198.51.100.5", Link(i));
         }
 
-        var request = new HttpRequestMessage(HttpMethod.Post, new Uri("/api/links", UriKind.Relative)) { Content = JsonContent.Create(Link(10)) };
+        using var request = new HttpRequestMessage(HttpMethod.Post, new Uri("/api/links", UriKind.Relative)) { Content = JsonContent.Create(Link(10)) };
         request.Headers.Add(ClientAddressStartupFilter.Header, "198.51.100.5");
         request.Headers.Add("X-Forwarded-For", "203.0.113.77");
 
-        Assert.Equal(HttpStatusCode.TooManyRequests, (await client.SendAsync(request)).StatusCode);
+        using var response = await client.SendAsync(request);
+        Assert.Equal(HttpStatusCode.TooManyRequests, response.StatusCode);
     }
 
     [Fact]

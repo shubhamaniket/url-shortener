@@ -34,6 +34,7 @@ public sealed class ClickEvent
     /// <summary>One of the fixed families in <see cref="Links.UserAgentFamily"/>.</summary>
     public string UserAgentFamily { get; private set; }
 
+    /// <summary>Creates the event for one redirect, keeping only the referrer host and the browser family.</summary>
     /// <param name="shortLinkId">Id of the stored link that was followed.</param>
     /// <param name="occurredAtUtc">Time of the redirect, in UTC.</param>
     /// <param name="referer">Raw <c>Referer</c> header value, if any; only its host is kept.</param>

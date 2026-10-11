@@ -13,6 +13,11 @@ internal sealed class FakeClickRecorder(Exception? failWith = null) : IClickReco
     public bool TryRecord(ClickEvent clickEvent)
     {
         Recorded.Add(clickEvent);
-        return failWith is null ? true : throw failWith;
+        if (failWith is not null)
+        {
+            throw failWith;
+        }
+
+        return true;
     }
 }

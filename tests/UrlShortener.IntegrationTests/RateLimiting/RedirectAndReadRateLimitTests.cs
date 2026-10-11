@@ -129,7 +129,7 @@ public sealed class RedirectAndReadRateLimitTests(ApiFactory factory) : IClassFi
     }
 
     private WebApplicationFactory<Program> Host(params (string Setting, string Value)[] budgets) =>
-        RateLimitedHost.Create(factory, budgets.ToDictionary(b => $"RateLimiting:{b.Setting}", b => (string?)b.Value));
+        RateLimitedHost.Create(factory, budgets.ToDictionary<(string Setting, string Value), string, string?>(b => $"RateLimiting:{b.Setting}", b => b.Value));
 
     private static int RetryAfter(HttpResponseMessage response) =>
         int.Parse(Assert.Single(response.Headers.GetValues("Retry-After")), CultureInfo.InvariantCulture);
