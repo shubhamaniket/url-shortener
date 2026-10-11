@@ -23,7 +23,7 @@ COPY --from=web /src/src/UrlShortener.Api/wwwroot src/UrlShortener.Api/wwwroot
 RUN dotnet publish src/UrlShortener.Api/UrlShortener.Api.csproj -c Release -o /app --no-restore
 
 # 3. Runtime: unprivileged user, data on a volume, migrations applied on start
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 RUN mkdir /data && chown "$APP_UID" /data
 COPY --from=build /app ./
