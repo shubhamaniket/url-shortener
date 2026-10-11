@@ -11,7 +11,7 @@ public sealed class LinkDetailsTests(ApiFactory factory) : IClassFixture<ApiFact
     private static readonly Uri LinksUri = new("/api/links", UriKind.Relative);
 
     [Fact]
-    public async Task NewLinkHasExactlyTheContractFieldsAndZeroClicks()
+    public async Task NewLinkHasExactlyTheContractFieldsNoExpiryAndZeroClicks()
     {
         var code = await CreateLinkAsync(new { url = "https://example.com/details" });
 
@@ -21,12 +21,13 @@ public sealed class LinkDetailsTests(ApiFactory factory) : IClassFixture<ApiFact
         Assert.Equal("application/json", response.Content.Headers.ContentType?.MediaType);
         var body = await ReadJsonAsync(response);
         Assert.Equal(
-            ["clickCount", "code", "createdAtUtc", "originalUrl", "shortUrl"],
+            ["clickCount", "code", "createdAtUtc", "expiresAtUtc", "originalUrl", "shortUrl"],
             body.EnumerateObject().Select(property => property.Name).Order(StringComparer.Ordinal));
         Assert.Equal(code, body.GetProperty("code").GetString());
         Assert.Equal($"{ApiFactory.PublicBaseUrl}/{code}", body.GetProperty("shortUrl").GetString());
         Assert.Equal("https://example.com/details", body.GetProperty("originalUrl").GetString());
         Assert.EndsWith("Z", body.GetProperty("createdAtUtc").GetString(), StringComparison.Ordinal);
+        Assert.Equal(JsonValueKind.Null, body.GetProperty("expiresAtUtc").ValueKind);
         Assert.Equal(0, body.GetProperty("clickCount").GetInt64());
     }
 

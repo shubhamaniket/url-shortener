@@ -12,4 +12,11 @@ public sealed class CreateLinkRequest
     /// <summary>Optional custom alias: 3–30 letters, digits, '-' or '_'.</summary>
     /// <example>team-offsite</example>
     public string? CustomAlias { get; init; }
+
+    /// <summary>
+    /// Optional expiry: ISO 8601 with a time zone (<c>Z</c> or an offset), in the future. Kept as text
+    /// so a value without a zone is rejected rather than read as server-local time.
+    /// </summary>
+    /// <example>2026-12-31T23:59:00+05:30</example>
+    public string? ExpiresAt { get; init; }
 }

@@ -6,8 +6,9 @@ namespace UrlShortener.IntegrationTests;
 
 /// <summary>
 /// Fails when the API generated from the code drifts from the reviewed contract in
-/// specs/001-greenfield-core/contracts/openapi.yaml (research R14). The expected values below are
-/// copied from that file; change both together. <c>GET /{code}</c> and <c>/health</c> are not in the
+/// specs/002-brownfield-analytics-expiry/contracts/openapi.yaml (v0.2.0, which extends feature 001's;
+/// research R14 of feature 001, R8 of feature 002). The expected values below are copied from that
+/// file; change both together. <c>GET /api/links/{code}/stats</c> joins with feature 002 task T015. <c>GET /{code}</c> and <c>/health</c> are not in the
 /// generated document by design (hidden / not a controller) and are covered by their own tests.
 /// </summary>
 public sealed class OpenApiContractTests(ApiFactory factory) : IClassFixture<ApiFactory>
@@ -38,8 +39,8 @@ public sealed class OpenApiContractTests(ApiFactory factory) : IClassFixture<Api
     }
 
     [Theory]
-    [InlineData("CreateLinkRequest", new[] { "customAlias", "url" })]
-    [InlineData("LinkResponse", new[] { "clickCount", "code", "createdAtUtc", "originalUrl", "shortUrl" })]
+    [InlineData("CreateLinkRequest", new[] { "customAlias", "expiresAt", "url" })]
+    [InlineData("LinkResponse", new[] { "clickCount", "code", "createdAtUtc", "expiresAtUtc", "originalUrl", "shortUrl" })]
     public async Task GeneratedSchemasHaveContractFields(string schema, string[] expectedFields)
     {
         var document = await GetGeneratedDocumentAsync();

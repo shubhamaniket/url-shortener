@@ -152,6 +152,48 @@ public sealed class ShortLinkRepositoryTests : IAsyncLifetime
         }
     }
 
+    [Fact]
+    public async Task ReplaceExpiredDoesNothingWhileTheLinkHasNotExpired()
+    {
+        var expiresAt = CreatedAt.AddHours(1);
+        await using var scope = _services.CreateAsyncScope();
+        var repository = Repository(scope);
+        await repository.TryAddAsync(
+            ShortLink.CreateWithCustomAlias("promo", "https://example.com/old", CreatedAt, expiresAt), CancellationToken.None);
+        var current = (await repository.FindByNormalizedCodeAsync("promo", CancellationToken.None))!;
+
+        var replaced = await repository.TryReplaceExpiredAsync(
+            current,
+            ShortLink.CreateWithCustomAlias("Promo", "https://example.com/new", expiresAt.AddTicks(-1)),
+            expiresAt.AddTicks(-1),
+            CancellationToken.None);
+
+        Assert.False(replaced);
+        Assert.Equal("https://example.com/old", (await Db(scope).ShortLinks.AsNoTracking().SingleAsync()).OriginalUrl);
+    }
+
+    [Fact]
+    public async Task ReplaceExpiredRollsBackTheDeleteWhenTheInsertFails()
+    {
+        var expiresAt = CreatedAt.AddHours(1);
+        await using var scope = _services.CreateAsyncScope();
+        var repository = Repository(scope);
+        await repository.TryAddAsync(
+            ShortLink.CreateWithCustomAlias("promo", "https://example.com/old", CreatedAt, expiresAt), CancellationToken.None);
+        await repository.TryAddAsync(
+            ShortLink.CreateWithCustomAlias("taken", "https://example.com/other", CreatedAt), CancellationToken.None);
+        var expired = (await repository.FindByNormalizedCodeAsync("promo", CancellationToken.None))!;
+
+        // The replacement's code is held by a live link, so the insert hits the unique index.
+        var replaced = await repository.TryReplaceExpiredAsync(
+            expired, ShortLink.CreateWithCustomAlias("taken", "https://example.com/new", expiresAt), expiresAt, CancellationToken.None);
+
+        Assert.False(replaced);
+        Assert.Equal(
+            ["https://example.com/old", "https://example.com/other"],
+            await Db(scope).ShortLinks.AsNoTracking().OrderBy(link => link.Id).Select(link => link.OriginalUrl).ToListAsync());
+    }
+
     private static IShortLinkRepository Repository(AsyncServiceScope scope) =>
         scope.ServiceProvider.GetRequiredService<IShortLinkRepository>();
 

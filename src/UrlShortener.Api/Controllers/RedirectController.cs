@@ -13,20 +13,32 @@ namespace UrlShortener.Api.Controllers;
 public sealed class RedirectController(ILinkService linkService) : ControllerBase
 {
     /// <summary>
-    /// 302 to the original URL, or 404. The route constraint rejects malformed codes before any
+    /// 302 to the original URL, 404 for an unknown code, or 410 for an expired link. The route constraint rejects malformed codes before any
     /// lookup; literal routes such as <c>/health</c> and <c>/api/...</c> take precedence.
     /// </summary>
     [HttpGet("{code:regex(^[[A-Za-z0-9_-]]{{3,30}}$)}")]
     public async Task<IActionResult> Follow(string code, CancellationToken cancellationToken)
     {
-        var originalUrl = await linkService.ResolveForRedirectAsync(code, cancellationToken);
-        if (originalUrl is null)
+        var resolution = await linkService.ResolveForRedirectAsync(code, cancellationToken);
+        if (resolution.Outcome == RedirectOutcome.Expired)
+        {
+            // Gone for good, unless the alias is later reclaimed; never cached, so a reclaimed code
+            // is followed to its new destination (FR-004, FR-006a).
+            Response.Headers.CacheControl = "no-store";
+            return Problem(
+                type: "https://tools.ietf.org/html/rfc9110#section-15.5.11",
+                title: "Link expired",
+                statusCode: StatusCodes.Status410Gone,
+                detail: "This short link has expired.");
+        }
+
+        if (!resolution.IsFound)
         {
             return NotFound();
         }
 
         // Temporary (302) and not cacheable, so every visit reaches the service and is counted (FR-013).
         Response.Headers.CacheControl = "no-store";
-        return Redirect(originalUrl);
+        return Redirect(resolution.Url);
     }
 }

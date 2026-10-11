@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -57,6 +58,36 @@ public sealed class ConcurrencyTests(ApiFactory factory) : IClassFixture<ApiFact
         var normalized = alias.ToLowerInvariant();
         Assert.Equal(1, await scope.ServiceProvider.GetRequiredService<AppDbContext>().ShortLinks
             .CountAsync(link => link.NormalizedCode == normalized));
+    }
+
+    [Fact]
+    public async Task ConcurrentClaimsOfOneExpiredAliasProduceExactlyOneLink()
+    {
+        const int Attempts = 10;
+        var alias = $"reclaim-{Guid.NewGuid():N}"[..20];
+        var client = factory.CreateClient();
+        var expiresAt = factory.Clock.GetUtcNow().AddMinutes(1).ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture);
+        (await client.PostAsJsonAsync(new Uri("/api/links", UriKind.Relative), new { url = "https://example.com/old", customAlias = alias, expiresAt }))
+            .EnsureSuccessStatusCode();
+        factory.Clock.Advance(TimeSpan.FromMinutes(2));
+
+        // Every request tries to reclaim the same expired alias at once.
+        var responses = await Task.WhenAll(Enumerable.Range(0, Attempts)
+            .Select(i => client.PostAsJsonAsync(
+                new Uri("/api/links", UriKind.Relative),
+                new { url = $"https://example.com/claim/{i}", customAlias = i % 2 == 0 ? alias : alias.ToUpperInvariant() })));
+
+        var statuses = responses.Select(response => response.StatusCode).ToList();
+        Assert.Equal(1, statuses.Count(status => status == HttpStatusCode.Created));
+        Assert.Equal(Attempts - 1, statuses.Count(status => status == HttpStatusCode.Conflict));
+        Assert.DoesNotContain(HttpStatusCode.InternalServerError, statuses);
+
+        var winner = await responses.Single(response => response.StatusCode == HttpStatusCode.Created).Content.ReadFromJsonAsync<JsonElement>();
+        await using var scope = factory.Services.CreateAsyncScope();
+        var normalized = alias.ToLowerInvariant();
+        var stored = await scope.ServiceProvider.GetRequiredService<AppDbContext>().ShortLinks
+            .Where(link => link.NormalizedCode == normalized).ToListAsync();
+        Assert.Equal(winner.GetProperty("originalUrl").GetString(), Assert.Single(stored).OriginalUrl);
     }
 
     private async Task<string> CreateLinkAsync(string url)
