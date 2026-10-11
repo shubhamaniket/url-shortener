@@ -57,6 +57,37 @@ public sealed class OpenApiContractTests(ApiFactory factory) : IClassFixture<Api
         Assert.Equal(expectedFields, fields);
     }
 
+    [Theory]
+    [InlineData("url", "https://example.com/some/long/path?x=1")]
+    [InlineData("customAlias", "team-offsite")]
+    [InlineData("expiresAt", "2099-12-31T23:59:00+05:30")]
+    public async Task CreateLinkRequestShowsWorkingExamplesInsteadOfPlaceholders(string field, string example)
+    {
+        var document = await GetGeneratedDocumentAsync();
+
+        var property = document.GetProperty("components").GetProperty("schemas").GetProperty("CreateLinkRequest")
+            .GetProperty("properties").GetProperty(field);
+
+        Assert.Equal(example, property.GetProperty("example").GetString());
+    }
+
+    [Fact]
+    public async Task EveryOperationHasASingleLineSummary()
+    {
+        var document = await GetGeneratedDocumentAsync();
+
+        var operations = document.GetProperty("paths").EnumerateObject()
+            .SelectMany(path => path.Value.EnumerateObject().Select(operation => (Key: $"{operation.Name.ToUpperInvariant()} {path.Name}", operation.Value)))
+            .ToList();
+
+        Assert.NotEmpty(operations);
+        Assert.All(operations, operation =>
+        {
+            Assert.True(operation.Value.TryGetProperty("summary", out var summary), $"{operation.Key} has no summary.");
+            Assert.DoesNotContain('\n', summary.GetString()!);
+        });
+    }
+
     [Fact]
     public async Task ErrorResponsesAreDocumentedAsProblemJson()
     {
