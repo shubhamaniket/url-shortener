@@ -4,12 +4,13 @@
 [![CodeQL](https://github.com/shubhamaniket/url-shortener/actions/workflows/codeql.yml/badge.svg)](https://github.com/shubhamaniket/url-shortener/actions/workflows/codeql.yml)
 
 A URL shortener built with ASP.NET Core 8, EF Core + SQLite and a small React UI, developed
-spec-first with an AI coding agent under explicit engineer review. Create short links (random codes
+spec-first with an AI coding agent under explicit engineer review
+([how it was built](#how-this-was-built-spec-driven-development-with-an-ai-agent)). Create short links (random codes
 or custom aliases, optional expiry), follow them (302, or 410 once expired), and see per-link
 statistics: total clicks, clicks per day for 30 days, and top referrers. Clicks are recorded off the
 redirect path, every public endpoint is rate limited per client, and no IP address is ever stored.
 
-**Contents:** [Features](#features) · [Quick start](#quick-start) · [Using the API](#using-the-api) ·
+**Contents:** [Features](#features) · [How this was built](#how-this-was-built-spec-driven-development-with-an-ai-agent) · [Quick start](#quick-start) · [Using the API](#using-the-api) ·
 [Configuration](#configuration) · [Running the tests](#running-the-tests) ·
 [Why this tech stack](#why-this-tech-stack) · [Project structure](#project-structure) ·
 [Known limitations](#known-limitations) · [Documentation map](#documentation-map)
@@ -27,6 +28,98 @@ redirect path, every public endpoint is rate limited per client, and no IP addre
 | Errors | Every error is RFC 7807 ProblemDetails with a `traceId`; validation errors keyed by field |
 | Web UI | One page at `/`: shorten and copy, look up details and statistics, plain-language errors, keyboard and screen-reader friendly |
 | Health | `GET /health` (service + database) |
+
+## How this was built: spec-driven development with an AI agent
+
+The code was written with an AI coding agent (Claude Code), but **every requirement, design decision
+and change went through an explicit, reviewable process** with the engineer in control. The process
+is GitHub [Spec Kit](https://github.com/github/spec-kit)'s spec-driven development (SDD): nothing is
+coded until the requirement is written down, ambiguities are resolved by the engineer, the design is
+justified, and the work is broken into small, testable tasks. The full rationale is in
+[ADR-007](docs/adr/007-spec-driven-development.md).
+
+```mermaid
+flowchart TB
+  K["<b>Constitution</b><br/>9 engineering principles<br/>(checked by every plan)"]
+
+  subgraph F["Per feature (Spec Kit)"]
+    direction LR
+    S["<b>Specify</b><br/>user stories, requirements,<br/>success criteria"]
+    C["<b>Clarify</b><br/>AI asks, recommends;<br/><i>engineer decides</i>"]
+    P["<b>Plan</b><br/>research: decisions +<br/>rejected alternatives,<br/>data model, API contract"]
+    T["<b>Tasks</b><br/>ordered, acceptance criteria,<br/>named tests, sign-off flags"]
+    A["<b>Analyze</b><br/>consistency check across<br/>spec, plan, tasks, constitution"]
+    S --> C --> P --> T --> A
+  end
+
+  subgraph L["Per task (implementation loop)"]
+    direction LR
+    I["AI implements<br/><b>one</b> task"]
+    G["Gates: build (warnings = errors),<br/>format, <b>all</b> tests, vulnerability<br/>check, mutation checks"]
+    R{"Engineer<br/>review"}
+    CM["Commit<br/>+ AI usage log entry"]
+    I --> G --> R
+    R -- "changes needed" --> I
+    R -- "approve<br/>(+ sign-off if high impact)" --> CM
+    CM -- "next task" --> I
+  end
+
+  PR["<b>Pull request per phase</b><br/>impact analysis, AI assistance, sign-offs<br/>CI + CodeQL → engineer merges"]
+
+  K --> F
+  F --> L
+  L --> PR
+```
+
+| Step | Who does what | Artifact | Example from this repository |
+|---|---|---|---|
+| **Constitution** | Engineer sets the principles; AI drafts, engineer edits | [constitution.md](.specify/memory/constitution.md) | Principle V ("redirects must not fail because analytics fails") drove feature 002's off-path click recording |
+| **Specify** | AI turns the requirement into user stories, testable requirements and measurable success criteria | `specs/<feature>/spec.md` | [002 spec](specs/002-brownfield-analytics-expiry/spec.md): 3 stories, 22 requirements, a regression criterion for existing behaviour |
+| **Clarify** | AI asks one question at a time, each with options and a recommendation; **the engineer answers** | "Clarifications" section of each spec | Feature 002 Q2: the engineer **overrode** the AI's recommendation and made expired aliases reclaimable |
+| **Plan** | AI researches the design: each decision with rationale and **rejected alternatives**, data model, OpenAPI contract, constitution check | `plan.md`, `research.md`, `data-model.md`, `contracts/` | Feature 003: confirmed in the .NET 8 reference packs that the rate limiter needs no package but has no fake-clock hook, before planning the tests |
+| **Tasks** | AI breaks the plan into ordered tasks: acceptance criteria, named test files, which existing tests may change and why, sign-off flags | `tasks.md` | Feature 002: the new click recorder was built beside the old one and switched over in a single task, so counting never broke between commits |
+| **Analyze** | AI cross-checks spec, plan, tasks and constitution; findings are fixed **before any code** | Report in the conversation; fixes in the artifacts | Feature 002: found that reclaiming an alias while its clicks are still queued would make the writer drop a whole batch; fixed in the design |
+| **Implement** | AI implements **one task**, runs every gate, reports evidence (including mutation checks: breaking the code on purpose to prove a test catches it), then **waits for "approve"** | Commits with `Implements Txxx` and an `AI-Assisted:` trailer; [AI usage log](docs/ai-usage-log.md) | High-impact changes (migrations, the redirect path, validation and security, new dependencies, data deletion) need explicit sign-off; since feature 002, 10 commits carry a `High-impact:` line |
+| **Pull request** | Engineer reviews the phase and merges | [PR template](.github/pull_request_template.md): summary, tasks, impact analysis, AI assistance, quality gates, sign-offs | CI and CodeQL must be green; CodeQL's first run raised 5 issues in test code, fixed before merge |
+
+### Per feature
+
+| Feature | Kind | Clarifications | Tasks | Analyze findings | Write-up |
+|---|---|---|---|---|---|
+| [001](specs/001-greenfield-core/) core service | Greenfield | 5 | 25 | 9 (0 critical) | [scenario 01](docs/scenarios/01-greenfield.md) |
+| [002](specs/002-brownfield-analytics-expiry/) expiry, analytics, off-path recording | Brownfield (impact analysis verified **before** the spec) | 5 | 22 | 7 (0 critical) | [scenario 02](docs/scenarios/02-brownfield.md) |
+| [003](specs/003-reliability-abuse-protection/) rate limiting | Ambiguous (interpretation written **before** the spec) | 3 | 6 | 4 (0 critical) | [scenario 03](docs/scenarios/03-ambiguous.md) |
+| [004](specs/004-web-ui/) web UI | Compact cycle (no open questions, so clarify was skipped) | 0 | 4 | 2 | [plan](specs/004-web-ui/plan.md) |
+
+Tooling decisions that are not product behaviour (Docker, CI) were recorded as
+[ADRs](docs/adr/README.md) instead of specs.
+
+### Why it matters for AI-assisted work
+
+- **Requirements are explicit**: the AI cannot quietly invent or drop a requirement; every
+  requirement maps to tasks, tests and commits (see the [traceability matrix](#traceability-requirement--evidence)).
+- **Decisions stay with the engineer**: clarifications and sign-offs are where the engineer chose
+  differently from the AI, and those choices are recorded.
+- **Claims are verified, not trusted**: the full suite, mutation checks, CI and CodeQL caught real AI
+  mistakes before merge, e.g. a task order that broke 26 tests, a flaky CI run hiding a real bug,
+  rate limits that broke the sample requests (correction tables in each scenario document).
+- **Everything is auditable**: more than 100 entries in the [AI usage log](docs/ai-usage-log.md) record what the
+  AI produced and whether it was accepted, edited or rejected.
+
+### Follow one change end to end
+
+Example: *reclaiming an expired custom alias* (feature 002).
+
+1. Requirement and decision: [spec Clarifications, Q2](specs/002-brownfield-analytics-expiry/spec.md#clarifications)
+   (engineer's override) → requirement FR-006a.
+2. Design: [research R6](specs/002-brownfield-analytics-expiry/research.md) (conditional delete + insert
+   in one transaction; alternatives rejected).
+3. Task: T009 in [tasks.md](specs/002-brownfield-analytics-expiry/tasks.md) (acceptance criteria,
+   named tests, "sign-off: data deletion + concurrency").
+4. Commit `c6dc8f8` (`High-impact: data deletion and concurrency`) and
+   [AI usage log](docs/ai-usage-log.md) entry #61 (what was verified: a 10-way race, mutation checks).
+5. Pull request #14 with the sign-off, then validation in
+   [scenario 02 §6](docs/scenarios/02-brownfield.md#6-validation).
 
 ## Quick start
 
