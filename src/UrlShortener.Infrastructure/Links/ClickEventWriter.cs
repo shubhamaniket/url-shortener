@@ -91,7 +91,7 @@ public sealed partial class ClickEventWriter(
         }
         catch (Exception ex)
         {
-            // Any storage failure: report it and keep going; analytics must never stop (FR-014).
+            // Any storage failure: report it and keep going; analytics must never stop (FR-013).
             LogBatchFailed(logger, ex, batch.Count);
         }
 

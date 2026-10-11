@@ -11,6 +11,6 @@ public sealed class ClickRecordingOptions
     /// </summary>
     public int QueueCapacity { get; set; } = 10_000;
 
-    /// <summary>How long the writer keeps storing queued clicks after a shutdown request (FR-015).</summary>
+    /// <summary>How long the writer keeps storing queued clicks after a shutdown request (FR-014).</summary>
     public TimeSpan ShutdownFlushTimeout { get; set; } = TimeSpan.FromSeconds(5);
 }

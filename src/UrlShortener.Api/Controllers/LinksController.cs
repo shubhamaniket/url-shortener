@@ -36,10 +36,8 @@ public sealed class LinksController(ILinkService linkService) : ControllerBase
         return details is null ? NotFound() : LinkResponse.From(details);
     }
 
-    /// <summary>
-    /// Get click statistics: all-time total, clicks per UTC day for the last 30 days, and the top 5
-    /// referrers. Public like details, also for expired links; reading statistics is not a click.
-    /// </summary>
+    /// <summary>Get click statistics: all-time total, clicks per UTC day for the last 30 days, and the top 5 referrers.</summary>
+    /// <remarks>Public like details, also for expired links. Reading statistics is not a click.</remarks>
     [HttpGet("{code}/stats")]
     [ProducesResponseType<LinkStatsResponse>(StatusCodes.Status200OK, "application/json")]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, "application/problem+json")]

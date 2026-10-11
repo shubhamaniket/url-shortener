@@ -122,7 +122,7 @@ public sealed partial class LinkService(
         return link is null ? null : ToDetails(link);
     }
 
-    /// <remarks>Ignores expiry (FR-005) and records no click; "today" is the current UTC date.</remarks>
+    /// <remarks>Ignores expiry (US3 scenario 5) and records no click (FR-022); "today" is the current UTC date.</remarks>
     public async Task<LinkStatistics?> GetStatsAsync(string code, CancellationToken cancellationToken)
     {
         var link = await FindAsync(code, cancellationToken);
