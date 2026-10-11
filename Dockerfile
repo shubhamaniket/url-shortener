@@ -10,7 +10,7 @@ COPY web/ ./
 RUN npm run build
 
 # 2. API (Release), including the built UI
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 COPY Directory.Build.props .editorconfig ./
 COPY src/UrlShortener.Domain/UrlShortener.Domain.csproj src/UrlShortener.Domain/
