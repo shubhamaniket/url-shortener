@@ -6,4 +6,5 @@ public sealed record LinkDetails(
     string ShortUrl,
     string OriginalUrl,
     DateTime CreatedAtUtc,
+    DateTime? ExpiresAtUtc,
     long ClickCount);

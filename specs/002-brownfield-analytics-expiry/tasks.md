@@ -77,7 +77,7 @@ listed under "Changed tests" in that task, with the reason (research R10, spec S
   - **AC**: accepts "`yyyy-MM-ddTHH:mm[:ss[.fffffff]](Z|±HH:mm)`" only; converts to UTC; must be strictly after `now`; messages explain "a time zone is required" / "must be in the future"
   - **Tests**: tests/UrlShortener.UnitTests/Domain/ExpiryTimeTests.cs: `+05:30` → correct UTC; `Z` accepted; no zone, `12/10/2026`, `tomorrow`, past, exactly now → rejected with field `expiresAt`
   - **Sign-off**: input validation
-- [ ] T007 [US1] Application expiry: `CreateLinkCommand.ExpiresAt`, `LinkDetails.ExpiresAtUtc`, expiry validated and stored on create (both paths); `RedirectResolution` (`Found`/`NotFound`/`Expired`) returned by `ResolveForRedirectAsync`, recording no click when expired — in src/UrlShortener.Application/Links/
+- [x] T007 [US1] Application expiry: `CreateLinkCommand.ExpiresAt`, `LinkDetails.ExpiresAtUtc`, expiry validated and stored on create (both paths); `RedirectResolution` (`Found`/`NotFound`/`Expired`) returned by `ResolveForRedirectAsync`, recording no click when expired — in src/UrlShortener.Application/Links/
   - **AC**: expired check uses `TimeProvider`; details ignore expiry (FR-005)
   - **Tests**: tests/UrlShortener.UnitTests/Application/ExpiryTests.cs: create with/without expiry; invalid expiry stores nothing; before expiry → Found + 1 click; at/after → Expired + 0 clicks; details of an expired link returned with `ExpiresAtUtc`
   - **Changed tests**: ResolveLinkTests (9) assert on `RedirectResolution` instead of `string?` (signature change, same behaviour); fakes/command constructors gain the optional expiry argument

@@ -19,14 +19,16 @@ public sealed class RedirectController(ILinkService linkService) : ControllerBas
     [HttpGet("{code:regex(^[[A-Za-z0-9_-]]{{3,30}}$)}")]
     public async Task<IActionResult> Follow(string code, CancellationToken cancellationToken)
     {
-        var originalUrl = await linkService.ResolveForRedirectAsync(code, cancellationToken);
-        if (originalUrl is null)
+        var resolution = await linkService.ResolveForRedirectAsync(code, cancellationToken);
+        if (!resolution.IsFound)
         {
+            // Expired links cannot be created through the API yet; feature 002 task T008 adds
+            // expiresAt and maps Expired to 410 Gone.
             return NotFound();
         }
 
         // Temporary (302) and not cacheable, so every visit reaches the service and is counted (FR-013).
         Response.Headers.CacheControl = "no-store";
-        return Redirect(originalUrl);
+        return Redirect(resolution.Url);
     }
 }

@@ -24,19 +24,22 @@ public sealed partial class LinkService(
     {
         ArgumentNullException.ThrowIfNull(command);
 
+        // Fields are validated in request order (url, customAlias, expiresAt); the first failure is reported.
         var destination = DestinationUrl.Parse(command.Url, _settings.BaseUri.Host);
+        var alias = command.CustomAlias is null ? null : CustomAlias.Parse(command.CustomAlias);
         var createdAtUtc = timeProvider.GetUtcNow().UtcDateTime;
+        var expiresAtUtc = command.ExpiresAt is null ? (DateTime?)null : ExpiryTime.Parse(command.ExpiresAt, createdAtUtc).Utc;
 
-        if (command.CustomAlias is not null)
+        if (alias is not null)
         {
-            return await CreateWithAliasAsync(CustomAlias.Parse(command.CustomAlias), destination, createdAtUtc, cancellationToken);
+            return await CreateWithAliasAsync(alias, destination, createdAtUtc, expiresAtUtc, cancellationToken);
         }
 
         // The unique index decides; a collision (including with an alias in another letter case)
         // just means trying a new code.
         for (var attempt = 1; attempt <= MaxGenerationAttempts; attempt++)
         {
-            var link = ShortLink.CreateWithGeneratedCode(codeGenerator.Generate(), destination.Value, createdAtUtc);
+            var link = ShortLink.CreateWithGeneratedCode(codeGenerator.Generate(), destination.Value, createdAtUtc, expiresAtUtc);
 
             if (await repository.TryAddAsync(link, cancellationToken))
             {
@@ -51,9 +54,13 @@ public sealed partial class LinkService(
     }
 
     private async Task<LinkDetails> CreateWithAliasAsync(
-        CustomAlias alias, DestinationUrl destination, DateTime createdAtUtc, CancellationToken cancellationToken)
+        CustomAlias alias,
+        DestinationUrl destination,
+        DateTime createdAtUtc,
+        DateTime? expiresAtUtc,
+        CancellationToken cancellationToken)
     {
-        var link = ShortLink.CreateWithCustomAlias(alias.Value, destination.Value, createdAtUtc);
+        var link = ShortLink.CreateWithCustomAlias(alias.Value, destination.Value, createdAtUtc, expiresAtUtc);
 
         // One attempt: the unique index rejects an alias taken in any letter case (FR-012).
         if (!await repository.TryAddAsync(link, cancellationToken))
@@ -65,12 +72,18 @@ public sealed partial class LinkService(
         return ToDetails(link);
     }
 
-    public async Task<string?> ResolveForRedirectAsync(string code, CancellationToken cancellationToken)
+    public async Task<RedirectResolution> ResolveForRedirectAsync(string code, CancellationToken cancellationToken)
     {
         var link = await FindAsync(code, cancellationToken);
         if (link is null)
         {
-            return null;
+            return RedirectResolution.NotFound;
+        }
+
+        // An expired link stops redirecting and its visits are not clicks (FR-004).
+        if (link.IsExpiredAt(timeProvider.GetUtcNow().UtcDateTime))
+        {
+            return RedirectResolution.Expired;
         }
 
         // Temporary synchronous write (plan Complexity Tracking, Principle V); feature 002 moves
@@ -90,9 +103,10 @@ public sealed partial class LinkService(
             LogClickRecordingFailed(logger, ex, link.Code);
         }
 
-        return link.OriginalUrl;
+        return RedirectResolution.Found(link.OriginalUrl);
     }
 
+    /// <remarks>Ignores expiry: an expired link's details stay readable (FR-005).</remarks>
     public async Task<LinkDetails?> GetDetailsAsync(string code, CancellationToken cancellationToken)
     {
         var link = await FindAsync(code, cancellationToken);
@@ -113,6 +127,7 @@ public sealed partial class LinkService(
         _settings.BuildShortUrl(link.Code),
         link.OriginalUrl,
         link.CreatedAtUtc,
+        link.ExpiresAtUtc,
         link.ClickCount);
 
     // Log codes only: destination URLs can carry personal data in their query strings.

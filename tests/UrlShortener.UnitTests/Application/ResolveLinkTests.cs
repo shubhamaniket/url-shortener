@@ -26,9 +26,9 @@ public class ResolveLinkTests
     {
         var recorder = new FakeClickRecorder();
 
-        var url = await CreateService(recorder).ResolveForRedirectAsync("Abc123x", CancellationToken.None);
+        var resolution = await CreateService(recorder).ResolveForRedirectAsync("Abc123x", CancellationToken.None);
 
-        Assert.Equal(Destination, url);
+        Assert.Equal(RedirectResolution.Found(Destination), resolution);
         Assert.Single(recorder.RecordedLinkIds);
     }
 
@@ -37,22 +37,22 @@ public class ResolveLinkTests
     [InlineData("TEAM-OFFSITE")]
     public async Task ResolvesCustomAliasInAnyCase(string code)
     {
-        var url = await CreateService(new FakeClickRecorder()).ResolveForRedirectAsync(code, CancellationToken.None);
+        var resolution = await CreateService(new FakeClickRecorder()).ResolveForRedirectAsync(code, CancellationToken.None);
 
-        Assert.Equal("https://example.com/offsite", url);
+        Assert.Equal(RedirectResolution.Found("https://example.com/offsite"), resolution);
     }
 
     [Theory]
     [InlineData("zzzzzzz")]
     [InlineData("abc123x")]
     [InlineData("ABC123X")]
-    public async Task UnknownCodeOrGeneratedCodeInWrongCaseReturnsNullWithoutRecording(string code)
+    public async Task UnknownCodeOrGeneratedCodeInWrongCaseIsNotFoundWithoutRecording(string code)
     {
         var recorder = new FakeClickRecorder();
 
-        var url = await CreateService(recorder).ResolveForRedirectAsync(code, CancellationToken.None);
+        var resolution = await CreateService(recorder).ResolveForRedirectAsync(code, CancellationToken.None);
 
-        Assert.Null(url);
+        Assert.Equal(RedirectResolution.NotFound, resolution);
         Assert.Empty(recorder.RecordedLinkIds);
     }
 
@@ -61,9 +61,9 @@ public class ResolveLinkTests
     {
         var recorder = new FakeClickRecorder(new InvalidOperationException("database is locked"));
 
-        var url = await CreateService(recorder).ResolveForRedirectAsync("Abc123x", CancellationToken.None);
+        var resolution = await CreateService(recorder).ResolveForRedirectAsync("Abc123x", CancellationToken.None);
 
-        Assert.Equal(Destination, url);
+        Assert.Equal(RedirectResolution.Found(Destination), resolution);
         var entry = Assert.Single(_logger.Entries, e => e.Level >= LogLevel.Warning);
         Assert.Contains("Abc123x", entry.Message, StringComparison.Ordinal);
         Assert.DoesNotContain("example.com", entry.Message, StringComparison.Ordinal);
@@ -76,9 +76,9 @@ public class ResolveLinkTests
     {
         var recorder = new FakeClickRecorder(new OperationCanceledException("recorder timed out"));
 
-        var url = await CreateService(recorder).ResolveForRedirectAsync("Abc123x", CancellationToken.None);
+        var resolution = await CreateService(recorder).ResolveForRedirectAsync("Abc123x", CancellationToken.None);
 
-        Assert.Equal(Destination, url);
+        Assert.Equal(RedirectResolution.Found(Destination), resolution);
     }
 
     [Fact]
