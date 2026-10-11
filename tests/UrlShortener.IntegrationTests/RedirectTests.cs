@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 using UrlShortener.Application.Abstractions;
+using UrlShortener.Domain.Links;
 using UrlShortener.Infrastructure.Persistence;
 
 namespace UrlShortener.IntegrationTests;
@@ -39,7 +40,8 @@ public sealed class RedirectTests(ApiFactory factory) : IClassFixture<ApiFactory
             Assert.Equal(HttpStatusCode.Found, (await client.GetAsync(Relative(code))).StatusCode);
         }
 
-        Assert.Equal(3, await StoredClickCountAsync(code));
+        // Stored in the background: eventually consistent within 5 seconds (FR-012).
+        await Eventually.AssertAsync(async () => await StoredClickCountAsync(code) == 3, "three clicks counted");
     }
 
     [Theory]
@@ -75,7 +77,7 @@ public sealed class RedirectTests(ApiFactory factory) : IClassFixture<ApiFactory
     {
         var code = await CreateLinkAsync("https://example.com/resilient");
         var client = factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
-                services.AddScoped<IClickRecorder, ThrowingClickRecorder>()))
+                services.AddSingleton<IClickRecorder, ThrowingClickRecorder>()))
             .CreateClient(NoRedirects);
 
         var response = await client.GetAsync(Relative(code));
@@ -115,7 +117,7 @@ public sealed class RedirectTests(ApiFactory factory) : IClassFixture<ApiFactory
 
     private sealed class ThrowingClickRecorder : IClickRecorder
     {
-        public Task RecordClickAsync(long linkId, CancellationToken cancellationToken) =>
-            throw new InvalidOperationException("analytics store unavailable");
+        public bool TryRecord(ClickEvent clickEvent) =>
+            throw new InvalidOperationException("analytics queue unavailable");
     }
 }

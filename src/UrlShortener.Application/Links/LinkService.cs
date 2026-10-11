@@ -81,8 +81,11 @@ public sealed partial class LinkService(
         return ToDetails(link);
     }
 
-    public async Task<RedirectResolution> ResolveForRedirectAsync(string code, CancellationToken cancellationToken)
+    public async Task<RedirectResolution> ResolveForRedirectAsync(
+        string code, ClickContext click, CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(click);
+
         var link = await FindAsync(code, cancellationToken);
         if (link is null)
         {
@@ -90,25 +93,21 @@ public sealed partial class LinkService(
         }
 
         // An expired link stops redirecting and its visits are not clicks (FR-004).
-        if (link.IsExpiredAt(timeProvider.GetUtcNow().UtcDateTime))
+        var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
+        if (link.IsExpiredAt(nowUtc))
         {
             return RedirectResolution.Expired;
         }
 
-        // Temporary synchronous write (plan Complexity Tracking, Principle V); feature 002 moves
-        // click recording off the redirect path. Failures are isolated here so the redirect never
-        // depends on analytics.
+        // Off the redirect path (constitution V): the click is only queued; a background writer
+        // stores it. ClickEvent.Create keeps just the referrer host and browser family.
         try
         {
-            await clickRecorder.RecordClickAsync(link.Id, cancellationToken);
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            throw;
+            clickRecorder.TryRecord(ClickEvent.Create(link.Id, nowUtc, click.Referrer, click.UserAgent));
         }
         catch (Exception ex)
         {
-            // Any other recording failure is isolated from the redirect (FR-015a).
+            // Any recording failure is isolated from the redirect (FR-015a).
             LogClickRecordingFailed(logger, ex, link.Code);
         }
 

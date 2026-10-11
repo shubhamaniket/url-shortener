@@ -2,6 +2,7 @@ using System.Threading.Channels;
 
 using Microsoft.Extensions.Options;
 
+using UrlShortener.Application.Abstractions;
 using UrlShortener.Domain.Links;
 
 namespace UrlShortener.Infrastructure.Links;
@@ -11,7 +12,7 @@ namespace UrlShortener.Infrastructure.Links;
 /// enqueue and no database I/O (research R4, constitution V). The queue is bounded: when it is
 /// full the oldest event is dropped and counted, never the redirect delayed. Singleton.
 /// </summary>
-public sealed class ChannelClickRecorder
+public sealed class ChannelClickRecorder : IClickRecorder
 {
     private readonly Channel<ClickEvent> _channel;
     private long _droppedCount;

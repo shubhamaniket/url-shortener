@@ -22,12 +22,12 @@ public static class DependencyInjection
             provider.GetRequiredService<IConfiguration>().GetConnectionString("Default") ?? DefaultConnectionString));
         services.AddScoped<IShortLinkRepository, ShortLinkRepository>();
         services.AddSingleton<IShortCodeGenerator, Base62CodeGenerator>();
-        services.AddScoped<IClickRecorder, DbClickRecorder>();
 
-        // Background click pipeline (feature 002). Built and running, but nothing is queued until
-        // the redirect switches from DbClickRecorder to the channel recorder.
+        // Click recording (feature 002): redirects queue clicks in memory; the hosted writer stores
+        // them in batches. One recorder instance serves both sides.
         services.AddOptions<ClickRecordingOptions>();
         services.AddSingleton<ChannelClickRecorder>();
+        services.AddSingleton<IClickRecorder>(provider => provider.GetRequiredService<ChannelClickRecorder>());
         services.AddScoped<IClickEventStore, ClickEventStore>();
         services.AddHostedService<ClickEventWriter>();
 

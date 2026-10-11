@@ -1,15 +1,18 @@
 using UrlShortener.Application.Abstractions;
+using UrlShortener.Domain.Links;
 
 namespace UrlShortener.UnitTests.Fakes;
 
-/// <summary>Counts recorded clicks, or throws the given exception when one is set.</summary>
+/// <summary>Keeps recorded clicks, or throws the given exception when one is set.</summary>
 internal sealed class FakeClickRecorder(Exception? failWith = null) : IClickRecorder
 {
-    public List<long> RecordedLinkIds { get; } = [];
+    public List<ClickEvent> Recorded { get; } = [];
 
-    public Task RecordClickAsync(long linkId, CancellationToken cancellationToken)
+    public IEnumerable<long> RecordedLinkIds => Recorded.Select(click => click.ShortLinkId);
+
+    public bool TryRecord(ClickEvent clickEvent)
     {
-        RecordedLinkIds.Add(linkId);
-        return failWith is null ? Task.CompletedTask : Task.FromException(failWith);
+        Recorded.Add(clickEvent);
+        return failWith is null ? true : throw failWith;
     }
 }

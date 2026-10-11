@@ -42,6 +42,9 @@ public sealed class LinkDetailsTests(ApiFactory factory) : IClassFixture<ApiFact
         }
 
         var client = factory.CreateClient();
+        await Eventually.AssertAsync(
+            async () => (await ReadJsonAsync(await client.GetAsync(DetailsUri(code)))).GetProperty("clickCount").GetInt64() == 3,
+            "three clicks counted");
         var first = await ReadJsonAsync(await client.GetAsync(DetailsUri(code)));
         var second = await ReadJsonAsync(await client.GetAsync(DetailsUri(code)));
 
