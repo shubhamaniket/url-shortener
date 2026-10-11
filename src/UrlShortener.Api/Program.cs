@@ -21,7 +21,7 @@ builder.Services.AddControllers(options =>
 builder.Services.AddEndpointsApiExplorer();
 // Request examples and operation summaries come from the XML doc comments on contracts and controllers.
 builder.Services.AddSwaggerGen(options => options.IncludeXmlComments(
-    Path.Combine(AppContext.BaseDirectory, $"{typeof(Program).Assembly.GetName().Name}.xml"),
+    Path.Join(AppContext.BaseDirectory, $"{typeof(Program).Assembly.GetName().Name}.xml"),
     includeControllerXmlComments: true));
 builder.Services.AddHealthChecks().AddCheck<DatabaseHealthCheck>("database");
 builder.Services.AddProblemDetails(options => options.CustomizeProblemDetails = context =>
@@ -43,6 +43,12 @@ var app = builder.Build();
 
 app.UseExceptionHandler();
 app.UseStatusCodePages();
+
+// The web UI (feature 004): index.html at "/" and its hashed files under /assets. No catch-all route,
+// which would collide with the redirect route /{code}; "assets" is a reserved alias, so no short code
+// can shadow the files. Without a built UI (no wwwroot), these simply serve nothing.
+app.UseDefaultFiles();
+app.UseStaticFiles();
 
 // Per-client budgets (feature 003). Runs before any controller, so a rejected request has no effect.
 app.UseRateLimiter();

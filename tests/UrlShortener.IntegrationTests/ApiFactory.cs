@@ -19,7 +19,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     public const string PublicBaseUrl = "http://localhost:5058";
 
     private readonly string _databasePath =
-        Path.Combine(Path.GetTempPath(), $"urlshortener-test-{Guid.NewGuid():N}.db");
+        Path.Join(Path.GetTempPath(), $"urlshortener-test-{Guid.NewGuid():N}.db");
 
     public AdjustableTimeProvider Clock { get; } = new();
 

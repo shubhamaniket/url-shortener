@@ -15,7 +15,7 @@ public sealed class ShortLinkRepositoryTests : IAsyncLifetime
 {
     private static readonly DateTime CreatedAt = new(2026, 10, 10, 13, 45, 0, DateTimeKind.Utc);
 
-    private readonly string _databasePath = Path.Combine(Path.GetTempPath(), $"urlshortener-test-{Guid.NewGuid():N}.db");
+    private readonly string _databasePath = Path.Join(Path.GetTempPath(), $"urlshortener-test-{Guid.NewGuid():N}.db");
     private ServiceProvider _services = null!;
 
     public async Task InitializeAsync()

@@ -24,7 +24,7 @@ public sealed class ClickEventWriterTests : IAsyncLifetime
 
     private static readonly DateTime CreatedAt = new(2026, 10, 10, 13, 45, 0, DateTimeKind.Utc);
 
-    private readonly string _databasePath = Path.Combine(Path.GetTempPath(), $"urlshortener-writer-{Guid.NewGuid():N}.db");
+    private readonly string _databasePath = Path.Join(Path.GetTempPath(), $"urlshortener-writer-{Guid.NewGuid():N}.db");
     private ServiceProvider _services = null!;
 
     public Task InitializeAsync() => Task.CompletedTask;

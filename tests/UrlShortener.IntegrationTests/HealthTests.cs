@@ -20,7 +20,7 @@ public class HealthTests(ApiFactory factory) : IClassFixture<ApiFactory>
     public async Task UnhealthyWhenDatabaseIsUnreachable()
     {
         // A database file inside a directory that does not exist cannot be opened or created.
-        var unreachable = Path.Combine(Path.GetTempPath(), $"missing-{Guid.NewGuid():N}", "urlshortener.db");
+        var unreachable = Path.Join(Path.GetTempPath(), $"missing-{Guid.NewGuid():N}", "urlshortener.db");
         using var unhealthyFactory = factory.WithWebHostBuilder(builder =>
             builder.ConfigureAppConfiguration(configuration => configuration.AddInMemoryCollection(
                 new Dictionary<string, string?>
