@@ -115,6 +115,7 @@ public sealed partial class LinkService(
         return RedirectResolution.Found(link.OriginalUrl);
     }
 
+    /// <summary>Returns a link's details and click count, or <c>null</c> when no link matches.</summary>
     /// <remarks>Ignores expiry: an expired link's details stay readable (FR-005).</remarks>
     public async Task<LinkDetails?> GetDetailsAsync(string code, CancellationToken cancellationToken)
     {
@@ -122,6 +123,7 @@ public sealed partial class LinkService(
         return link is null ? null : ToDetails(link);
     }
 
+    /// <summary>Returns a link's click statistics, or <c>null</c> when no link matches.</summary>
     /// <remarks>Ignores expiry (US3 scenario 5) and records no click (FR-022); "today" is the current UTC date.</remarks>
     public async Task<LinkStatistics?> GetStatsAsync(string code, CancellationToken cancellationToken)
     {

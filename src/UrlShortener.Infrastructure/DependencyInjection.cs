@@ -12,6 +12,7 @@ public static class DependencyInjection
 {
     public const string DefaultConnectionString = "Data Source=urlshortener.db";
 
+    /// <summary>Registers persistence, code generation, click recording and statistics.</summary>
     /// <remarks>
     /// The connection string is read when the context is first created, not at registration, so
     /// configuration added after service registration (e.g. by test hosts) is honoured.
