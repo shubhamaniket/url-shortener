@@ -18,6 +18,7 @@ public sealed class LinksController(ILinkService linkService) : ControllerBase
     [ProducesResponseType<LinkResponse>(StatusCodes.Status201Created, "application/json")]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict, "application/problem+json")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status429TooManyRequests, "application/problem+json")]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status500InternalServerError, "application/problem+json")]
     public async Task<ActionResult<LinkResponse>> Create(CreateLinkRequest request, CancellationToken cancellationToken)
     {
@@ -34,6 +35,7 @@ public sealed class LinksController(ILinkService linkService) : ControllerBase
     [EnableRateLimiting(RateLimitPolicies.Read)]
     [ProducesResponseType<LinkResponse>(StatusCodes.Status200OK, "application/json")]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, "application/problem+json")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status429TooManyRequests, "application/problem+json")]
     public async Task<ActionResult<LinkResponse>> Get(string code, CancellationToken cancellationToken)
     {
         var details = await linkService.GetDetailsAsync(code, cancellationToken);
@@ -46,6 +48,7 @@ public sealed class LinksController(ILinkService linkService) : ControllerBase
     [EnableRateLimiting(RateLimitPolicies.Read)]
     [ProducesResponseType<LinkStatsResponse>(StatusCodes.Status200OK, "application/json")]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, "application/problem+json")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status429TooManyRequests, "application/problem+json")]
     public async Task<ActionResult<LinkStatsResponse>> GetStats(string code, CancellationToken cancellationToken)
     {
         var statistics = await linkService.GetStatsAsync(code, cancellationToken);

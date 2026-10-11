@@ -78,7 +78,7 @@ unchanged.
 
 **Independent Test**: changed budget enforced; invalid budget refuses startup; rejection logged by policy without an address; contract lists 429.
 
-- [ ] T004 [US3] Operator-facing completion: `[ProducesResponseType<ProblemDetails>(429, "application/problem+json")]` on the four limited actions; OpenAPI drift test switched to specs/003-reliability-abuse-protection/contracts/openapi.yaml v0.3.0
+- [x] T004 [US3] Operator-facing completion: `[ProducesResponseType<ProblemDetails>(429, "application/problem+json")]` on the four limited actions; OpenAPI drift test switched to specs/003-reliability-abuse-protection/contracts/openapi.yaml v0.3.0
   - **AC**: generated document lists 429 on `POST /api/links`, `GET /api/links/{code}`, `GET /api/links/{code}/stats`; a configured budget value is enforced; startup with an invalid value fails naming the setting; logs of a rejected request contain the policy name and no client address
   - **Tests**: tests/UrlShortener.IntegrationTests/RateLimiting/RateLimitOperationsTests.cs: host with `RateLimiting:Create:PermitLimit=3` enforces 3; host with `RateLimiting:Read:WindowSeconds=0` fails to start with the setting name; captured logs after a 429 contain "policy create" and not the test client address
   - **Changed tests**: OpenApiContractTests expected statuses gain 429 on the three operations (contract change)
