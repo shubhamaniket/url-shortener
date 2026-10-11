@@ -6,18 +6,18 @@ namespace UrlShortener.IntegrationTests;
 
 /// <summary>
 /// Fails when the API generated from the code drifts from the reviewed contract in
-/// specs/002-brownfield-analytics-expiry/contracts/openapi.yaml (v0.2.0, which extends feature 001's;
-/// research R14 of feature 001, R8 of feature 002). The expected values below are copied from that
-/// file; change both together. <c>GET /{code}</c> and <c>/health</c> are not in the
+/// specs/003-reliability-abuse-protection/contracts/openapi.yaml (v0.3.0, which extends features 001
+/// and 002; research R14 of feature 001, R8 of features 002 and 003). The expected values below are
+/// copied from that file; change both together. <c>GET /{code}</c> and <c>/health</c> are not in the
 /// generated document by design (hidden / not a controller) and are covered by their own tests.
 /// </summary>
 public sealed class OpenApiContractTests(ApiFactory factory) : IClassFixture<ApiFactory>
 {
     private static readonly Dictionary<string, string[]> ExpectedOperations = new()
     {
-        ["POST /api/links"] = ["201", "400", "409", "500"],
-        ["GET /api/links/{code}"] = ["200", "404"],
-        ["GET /api/links/{code}/stats"] = ["200", "404"],
+        ["POST /api/links"] = ["201", "400", "409", "429", "500"],
+        ["GET /api/links/{code}"] = ["200", "404", "429"],
+        ["GET /api/links/{code}/stats"] = ["200", "404", "429"],
     };
 
     [Fact]
@@ -94,7 +94,7 @@ public sealed class OpenApiContractTests(ApiFactory factory) : IClassFixture<Api
         var document = await GetGeneratedDocumentAsync();
         var create = document.GetProperty("paths").GetProperty("/api/links").GetProperty("post").GetProperty("responses");
 
-        foreach (var status in new[] { "400", "409", "500" })
+        foreach (var status in new[] { "400", "409", "429", "500" })
         {
             Assert.True(
                 create.GetProperty(status).GetProperty("content").TryGetProperty("application/problem+json", out _),

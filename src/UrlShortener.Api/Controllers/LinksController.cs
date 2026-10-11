@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 using UrlShortener.Api.Contracts;
+using UrlShortener.Api.RateLimiting;
 using UrlShortener.Application.Links;
 
 namespace UrlShortener.Api.Controllers;
@@ -12,9 +14,11 @@ public sealed class LinksController(ILinkService linkService) : ControllerBase
 {
     /// <summary>Create a short link with a generated code or the requested custom alias, optionally expiring.</summary>
     [HttpPost]
+    [EnableRateLimiting(RateLimitPolicies.Create)]
     [ProducesResponseType<LinkResponse>(StatusCodes.Status201Created, "application/json")]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict, "application/problem+json")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status429TooManyRequests, "application/problem+json")]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status500InternalServerError, "application/problem+json")]
     public async Task<ActionResult<LinkResponse>> Create(CreateLinkRequest request, CancellationToken cancellationToken)
     {
@@ -28,8 +32,10 @@ public sealed class LinksController(ILinkService linkService) : ControllerBase
 
     /// <summary>Get a link's details and total click count, also after it has expired. Public: knowing the code is enough.</summary>
     [HttpGet("{code}")]
+    [EnableRateLimiting(RateLimitPolicies.Read)]
     [ProducesResponseType<LinkResponse>(StatusCodes.Status200OK, "application/json")]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, "application/problem+json")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status429TooManyRequests, "application/problem+json")]
     public async Task<ActionResult<LinkResponse>> Get(string code, CancellationToken cancellationToken)
     {
         var details = await linkService.GetDetailsAsync(code, cancellationToken);
@@ -39,8 +45,10 @@ public sealed class LinksController(ILinkService linkService) : ControllerBase
     /// <summary>Get click statistics: all-time total, clicks per UTC day for the last 30 days, and the top 5 referrers.</summary>
     /// <remarks>Public like details, also for expired links. Reading statistics is not a click.</remarks>
     [HttpGet("{code}/stats")]
+    [EnableRateLimiting(RateLimitPolicies.Read)]
     [ProducesResponseType<LinkStatsResponse>(StatusCodes.Status200OK, "application/json")]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, "application/problem+json")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status429TooManyRequests, "application/problem+json")]
     public async Task<ActionResult<LinkStatsResponse>> GetStats(string code, CancellationToken cancellationToken)
     {
         var statistics = await linkService.GetStatsAsync(code, cancellationToken);

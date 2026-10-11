@@ -1,15 +1,19 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
+using UrlShortener.Api.RateLimiting;
 using UrlShortener.Application.Links;
 
 namespace UrlShortener.Api.Controllers;
 
 /// <summary>
-/// The redirect hot path, kept apart from the API controller (own route, future rate-limit policy).
+/// The redirect hot path, kept apart from the API controller (own route, own rate-limit policy).
+/// Every outcome (302, 404, 410) counts against the client's redirect budget (feature 003, FR-008).
 /// Hidden from Swagger; documented in contracts/openapi.yaml.
 /// </summary>
 [ApiController]
 [ApiExplorerSettings(IgnoreApi = true)]
+[EnableRateLimiting(RateLimitPolicies.Redirect)]
 public sealed class RedirectController(ILinkService linkService) : ControllerBase
 {
     /// <summary>
