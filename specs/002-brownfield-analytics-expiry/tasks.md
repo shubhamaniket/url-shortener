@@ -73,7 +73,7 @@ listed under "Changed tests" in that task, with the reason (research R10, spec S
 
 **Independent Test**: create a link expiring soon → 302; advance time past expiry → 410, no click; claim its alias → 201.
 
-- [ ] T006 [P] [US1] Implement expiry input rule in src/UrlShortener.Domain/Links/ExpiryTime.cs, field `expiresAt` (research R1)
+- [x] T006 [P] [US1] Implement expiry input rule in src/UrlShortener.Domain/Links/ExpiryTime.cs, field `expiresAt` (research R1)
   - **AC**: accepts "`yyyy-MM-ddTHH:mm[:ss[.fffffff]](Z|±HH:mm)`" only; converts to UTC; must be strictly after `now`; messages explain "a time zone is required" / "must be in the future"
   - **Tests**: tests/UrlShortener.UnitTests/Domain/ExpiryTimeTests.cs: `+05:30` → correct UTC; `Z` accepted; no zone, `12/10/2026`, `tomorrow`, past, exactly now → rejected with field `expiresAt`
   - **Sign-off**: input validation
