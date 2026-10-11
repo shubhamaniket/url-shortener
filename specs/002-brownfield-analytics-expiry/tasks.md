@@ -101,7 +101,7 @@ listed under "Changed tests" in that task, with the reason (research R10, spec S
 
 **Independent Test**: block or break the writer → redirects still 302 and fast; normal operation → counts catch up within 5 s.
 
-- [ ] T010 [P] [US2] Implement `ChannelClickRecorder` in src/UrlShortener.Infrastructure/Links/ChannelClickRecorder.cs as a concrete class with `bool TryRecord(ClickEvent)` (not yet behind `IClickRecorder`; T012 switches the interface, so the existing recorder keeps working until then)
+- [x] T010 [P] [US2] Implement `ChannelClickRecorder` in src/UrlShortener.Infrastructure/Links/ChannelClickRecorder.cs as a concrete class with `bool TryRecord(ClickEvent)` (not yet behind `IClickRecorder`; T012 switches the interface, so the existing recorder keeps working until then)
   - **AC**: bounded channel, capacity from options (default 10 000), `DropOldest`, single reader; drop counter readable and reset by the writer; `TryRecord` never blocks or throws
   - **Tests**: tests/UrlShortener.UnitTests/Infrastructure/ChannelClickRecorderTests.cs: enqueued events readable in order; capacity 3 + 5 writes → 3 newest kept, 2 drops counted; concurrent writers lose nothing below capacity
 - [ ] T011 [US2] Implement `ClickEventWriter : BackgroundService` in src/UrlShortener.Infrastructure/Links/ClickEventWriter.cs (research R5), registered but fed by nothing yet
