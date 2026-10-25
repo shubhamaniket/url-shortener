@@ -5,7 +5,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.31" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.33" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.1" />
   </ItemGroup>
 
